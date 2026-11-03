@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import { ArrowRight, CircleDashed } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+export function PhasePlaceholder({ title, description, phase, features }: { title: string; description: string; phase: string; features: string[] }) {
+  return <><div className="shell-page-heading"><span className="shell-overline">YOUR FITNESS WORKSPACE</span><h1>{title}</h1><p>{description}</p></div><Card className="shell-placeholder"><CardHeader><span className="shell-feature-icon"><CircleDashed size={26}/></span><span className="shell-badge">Planned · {phase}</span><CardTitle>{title} is next on the plan</CardTitle><CardDescription>This page establishes navigation and layout. Tracking and saving here will be added in a later phase.</CardDescription></CardHeader><CardContent><ul className="shell-feature-list">{features.map(feature => <li key={feature}><span/>{feature}</li>)}</ul><Link className="shell-button shell-button-secondary" href="/">Back to your dashboard <ArrowRight size={16}/></Link></CardContent></Card><p className="shell-fine-print">Your existing local logging prototype remains available at <Link href="/prototype">/prototype</Link>.</p></>;
+}
