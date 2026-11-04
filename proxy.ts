@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { hasSupabaseConfiguration } from '@/lib/config/environment';
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === '/api/foods/search') return NextResponse.next();
   if (!hasSupabaseConfiguration()) return NextResponse.next();
   let response = NextResponse.next({ request });
   const client = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {

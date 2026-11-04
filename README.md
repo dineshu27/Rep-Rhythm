@@ -28,7 +28,7 @@ For a production build, run `npm run build`, then `npm start`. The Vercel projec
 | `/auth` | Email sign-in and manual account save/load/export/deletion when configured |
 | `/prototype` | Original tracker preserved with its separate storage key and legacy schema |
 
-Foods can be entered from packaging/reference values or added from eight bundled USDA FoodData Central starter entries. Each starter names its preparation state and source ID. Search searches the saved library; tracking makes no live requests to a food database. Label-based records are user-entered values, not independently verified nutrition. Estimates are marked separately. Diary nutrition uses a saved food snapshot, so editing a library food does not rewrite previous meals. Planned meals reference current ingredient records; logging copies their current values into diary snapshots.
+Foods can be entered from packaging/reference values or added from eight bundled USDA FoodData Central starter entries. Each starter names its preparation state and source ID. Search all foods queries a server-side index of 13,585 USDA ingredients and prepared meals; Search saved foods filters the personal library. The indexed catalogue needs no external API key. Saved foods remain available offline. Label-based records are user-entered values, not independently verified nutrition. Estimates are marked separately. Diary nutrition uses a saved food snapshot, so editing a library food does not rewrite previous meals. Planned meals reference current ingredient records; logging copies their current values into diary snapshots.
 
 The supplied initial profile and targets remain editable preferences. The app does not calculate a medical calorie prescription. Missing activity/weight records remain unlogged; seven-day weight and food averages exclude missing days. Food targets are independent of workout energy. See [workout details](docs/workout-phase.md) for timers, logging conventions, and bounds.
 
@@ -74,7 +74,7 @@ PLAYWRIGHT_CHANNEL=chrome PLAYWRIGHT_PRODUCTION=1 npm run test:e2e -- --workers=
 
 Playwright uses port 3104. Set `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome. Alternatively run `npx playwright install chromium` and omit that variable. `PLAYWRIGHT_PRODUCTION=1` requires a completed build; otherwise the runner starts the development server.
 
-Validation includes 42 unit/database checks, 28 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
+Validation includes 51 unit/database checks, 36 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
 
 ## Phase status and next review
 
@@ -83,3 +83,9 @@ See [the review handoff](docs/next-review.md). Profile, nutrition, meals, workou
 The old `dineshu27/strato` repository, Vercel project `code`, and its deployments remain available. This repository's `supabase/schema.sql` belongs only to `/prototype`; do not apply it as the normalized production schema.
 
 Food portions scale each per-100-g value by grams ÷ 100. Fiber missing from an older food or snapshot remains unknown, not zero; totals are marked not recorded when any contributing food lacks fiber. Workout plan editors include upper/lower/core exercise selections and rounds (sets). Completed rounds can be logged together with identical reps/load; they remain individually editable. Rep totals and kg rep volume are calculated from the entered records, without inferring exercise calories.
+
+## Broad food search
+
+Use **Food diary → Search all foods** to find ingredients and dishes such as banana, cooked rice, dosa, paneer, curry or biryani. Choose **Add and log food**, then enter grams. The result is saved in the personal library; choosing a previously saved item uses the saved values and preserves edits. Results paginate in groups of 20. Search supports some common UK names, including aubergine, courgette and yoghurt.
+
+The server bundles a compact USDA SR Legacy, Foundation and FNDDS index. It does not send queries to an external nutrition service. The index includes only foods with complete calorie/protein/fat/carbohydrate values per 100 g; unknown fiber remains unknown. These are reference estimates, not verified nutrition for every brand or homemade recipe. Exact products and missing foods can still be entered from a label. See [dataset provenance and rebuild instructions](data/README.md).

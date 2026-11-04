@@ -14,7 +14,7 @@
 
 ## Verification
 
-Lint, TypeScript and the production build pass. All 42 unit/database checks and 30 browser/accessibility checks pass. Local PostgreSQL tests cover every normalized collection, RLS reads across all tables, denied cross-owner writes, anonymous denial, atomic rollback, stale revisions and recent-auth deletion. Offline reload preserves browser records. Production dependency audit: zero reported vulnerabilities; full development-tool audit has existing advisories.
+Lint, TypeScript and the production build pass. All 51 unit/database checks and 38 browser/accessibility checks pass. Local PostgreSQL tests cover every normalized collection, RLS reads across all tables, denied cross-owner writes, anonymous denial, atomic rollback, stale revisions and recent-auth deletion. Offline reload preserves browser records. Production dependency audit: zero reported vulnerabilities; full development-tool audit has existing advisories.
 
 ## Remaining external work
 
@@ -36,3 +36,7 @@ The previous Rep-Rhythm shell is commit `adff7a03728c83f440d5b3fff6aaca6711ee61c
 The food entry form now previews calories, protein, fat, carbs and fiber as grams change. Eight sourced USDA starter foods cover cooked rice, dry oats, raw chicken breast, apple, boiled chickpeas/lentils, hard-boiled egg and raw broccoli. Existing records without fiber load normally and are marked not recorded. The follow-up SQL migration preserves the same distinction.
 
 Workout editors now provide predefined upper/lower/core selections. Choose reps and rounds (sets) per exercise; completed rounds can be recorded together and edited individually afterward. The tracker computes total reps and kg rep volume.
+
+## Expanded food search
+
+The public food-search API now searches 13,585 USDA records, including everyday ingredients and prepared dishes. Search results can be chosen directly into the grams form. Importing a result preserves existing library edits, and saved foods remain available offline. Catalogue sources, filtering criteria and rebuild commands are documented in `data/README.md`. Exact branded products and recipes may still require custom label data; a live product-search service was not enabled after it returned errors during evaluation.

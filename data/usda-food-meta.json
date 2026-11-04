@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "retrievedAt": "2026-11-04",
+  "count": 13585,
+  "countsBySource": {
+    "legacy": 7793,
+    "foundation": 364,
+    "survey": 5428
+  },
+  "omitted": {
+    "missing_core_nutrients": 51,
+    "invalid_nutrients": 10,
+    "name_length": 3
+  },
+  "sources": [
+    {
+      "id": "legacy",
+      "label": "USDA SR Legacy",
+      "release": "2018",
+      "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_%202019-04-02.zip"
+    },
+    {
+      "id": "foundation",
+      "label": "USDA Foundation",
+      "release": "October 2026",
+      "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_json_2026-10-29.zip"
+    },
+    {
+      "id": "survey",
+      "label": "USDA FNDDS 2021–2023",
+      "release": "October 2024",
+      "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_survey_food_json_2024-10-31.zip"
+    }
+  ]
+}
