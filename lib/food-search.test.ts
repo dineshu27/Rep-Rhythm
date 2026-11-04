@@ -26,6 +26,12 @@ describe('full USDA food catalogue search', () => {
     expect(searchFoods('yoghurt').foods.map(food => food.id)).toEqual(searchFoods('yogurt').foods.map(food => food.id));
     expect(searchFoods('chicken with rice').foods.map(food => food.id)).toEqual(searchFoods('chicken rice').foods.map(food => food.id));
   });
+  it('keeps regional names specific to the intended ingredient', () => {
+    const beans = searchFoods('rajma'); expect(beans.total).toBeGreaterThan(0);
+    expect(beans.foods.every(food => /bean/i.test(food.name))).toBe(true);
+    const peppers = searchFoods('capsicum'); expect(peppers.total).toBeGreaterThan(0);
+    expect(peppers.foods.every(food => /sweet/i.test(food.name))).toBe(true);
+  });
   it('paginates deterministically without duplicate results and never invents missing foods', () => {
     const first = searchFoods('rice'); const second = searchFoods('rice', 2);
     expect(first.total).toBeGreaterThan(20); expect(first.foods).toHaveLength(20);

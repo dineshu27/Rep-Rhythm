@@ -74,7 +74,7 @@ PLAYWRIGHT_CHANNEL=chrome PLAYWRIGHT_PRODUCTION=1 npm run test:e2e -- --workers=
 
 Playwright uses port 3104. Set `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome. Alternatively run `npx playwright install chromium` and omit that variable. `PLAYWRIGHT_PRODUCTION=1` requires a completed build; otherwise the runner starts the development server.
 
-Validation includes 51 unit/database checks, 36 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
+Validation includes 52 unit/database checks, 36 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
 
 ## Phase status and next review
 

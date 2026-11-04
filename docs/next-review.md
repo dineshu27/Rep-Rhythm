@@ -14,7 +14,7 @@
 
 ## Verification
 
-Lint, TypeScript and the production build pass. All 51 unit/database checks and 38 browser/accessibility checks pass. Local PostgreSQL tests cover every normalized collection, RLS reads across all tables, denied cross-owner writes, anonymous denial, atomic rollback, stale revisions and recent-auth deletion. Offline reload preserves browser records. Production dependency audit: zero reported vulnerabilities; full development-tool audit has existing advisories.
+Lint, TypeScript and the production build pass. All 52 unit/database checks and 38 browser/accessibility checks pass. Local PostgreSQL tests cover every normalized collection, RLS reads across all tables, denied cross-owner writes, anonymous denial, atomic rollback, stale revisions and recent-auth deletion. Offline reload preserves browser records. Production dependency audit: zero reported vulnerabilities; full development-tool audit has existing advisories.
 
 ## Remaining external work
 

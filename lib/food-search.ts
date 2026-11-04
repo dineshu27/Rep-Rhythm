@@ -12,7 +12,7 @@ const rows = z.array(rowSchema).parse(rawIndex);
 const sources = Object.fromEntries(metadata.sources.map(source => [source.id, source.label]));
 export const FOOD_SEARCH_SIZE = 20;
 export const foodSearchQuery = z.string().trim().min(2).max(100).refine(value => /[\p{L}\p{N}]/u.test(value), 'Enter a food name.');
-const aliases: Record<string, string> = { aubergine: 'eggplant', aubergines: 'eggplant', brinjal: 'eggplant', courgette: 'zucchini', courgettes: 'zucchini', yoghurt: 'yogurt', yoghurts: 'yogurt', capsicum: 'pepper', bhindi: 'okra', rajma: 'kidney', tomatoes: 'tomato', potatoes: 'potato' };
+const aliases: Record<string, string> = { aubergine: 'eggplant', aubergines: 'eggplant', brinjal: 'eggplant', courgette: 'zucchini', courgettes: 'zucchini', yoghurt: 'yogurt', yoghurts: 'yogurt', capsicum: 'sweet pepper', bhindi: 'okra', rajma: 'kidney beans', tomatoes: 'tomato', potatoes: 'potato' };
 const stopWords = new Set(['and', 'with', 'the', 'of', 'in', 'a', 'an']);
 function normalize(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
 const indexed = rows.map(row => ({ row, name: normalize(row[1]), words: normalize(row[1]).split(' ') }));
@@ -22,7 +22,7 @@ function record(row: z.infer<typeof rowSchema>): FoodRecord {
 export function searchFoods(input: string, page = 1) {
   const query = foodSearchQuery.parse(input);
   z.number().int().min(1).max(1000).parse(page);
-  const terms = normalize(query).split(' ').filter(term => !stopWords.has(term)).map(term => aliases[term] ?? term);
+  const terms = normalize(query).split(' ').filter(term => !stopWords.has(term)).flatMap(term => (aliases[term] ?? term).split(' '));
   const matches = terms.length ? indexed.flatMap(item => {
     const found = terms.every(term => item.words.some(word => word.startsWith(term) || (term.length > 3 && term.endsWith('s') && word.startsWith(term.slice(0, -1)))));
     if (!found) return [];
