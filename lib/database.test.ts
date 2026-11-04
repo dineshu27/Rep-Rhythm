@@ -10,7 +10,7 @@ const b = '22222222-2222-4222-8222-222222222222';
 let db: PGlite;
 function backup() {
   const workspace = initialWorkspace();
-  workspace.foods = [{ id: 'food', name: 'Package oats', brand: 'Test', source: 'label', reference: 'Package', per100g: { calories: 200, protein: 10, fat: 5, carbs: 25 } }];
+  workspace.foods = [{ id: 'food', name: 'Package oats', brand: 'Test', source: 'label', reference: 'Package', per100g: { calories: 200, protein: 10, fat: 5, carbs: 25, fiber: 4 } }];
   workspace.logs = [{ id: 'food-log', date: '2026-11-04', meal: 'Breakfast', grams: 150, food: structuredClone(workspace.foods[0]) }];
   workspace.meals = [{ id: 'meal', name: 'Oats', date: '2026-11-04', meal: 'Breakfast', ingredients: [{ foodId: 'food', grams: 150 }] }];
   workspace.weights = [{ id: 'weight', date: '2026-11-04', kg: 73.2, waistCm: 85 }];
@@ -39,6 +39,7 @@ describe('normalized PostgreSQL storage and owner boundaries', () => {
       create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
       grant usage on schema auth to anon,authenticated; grant usage on schema public to anon,authenticated;`);
     await db.exec(readFileSync(new URL('../supabase/migrations/202611040001_fitness.sql', import.meta.url), 'utf8'));
+    await db.exec(readFileSync(new URL('../supabase/migrations/202611040002_food_fiber.sql', import.meta.url), 'utf8'));
   }, 30000);
   beforeEach(async () => { await db.exec(`reset role; truncate auth.users cascade; insert into auth.users values ('${a}'),('${b}');`); await asUser(a); });
   afterAll(async () => { await db?.close(); });
@@ -70,6 +71,19 @@ describe('normalized PostgreSQL storage and owner boundaries', () => {
     await expect(save(invalid, 1)).rejects.toThrow(); expect(Number((await load()).revision)).toBe(1);
     expect(completeBackupSchema.parse((await load()).backup)).toEqual(backup());
     await expect(save(backup(), 0)).rejects.toThrow('Account changed');
+  });
+  it('stores legacy fiber as unknown and rejects out-of-range fiber without losing records', async () => {
+    const legacy = JSON.parse(JSON.stringify(backup()));
+    delete legacy.workspace.foods[0].per100g.fiber;
+    delete legacy.workspace.logs[0].food.per100g.fiber;
+    await save(legacy);
+    const restored = completeBackupSchema.parse((await load()).backup);
+    expect(restored.workspace.foods[0].per100g.fiber).toBeNull();
+    expect(restored.workspace.logs[0].food.per100g.fiber).toBeNull();
+    const invalid = backup(); invalid.workspace.foods[0].per100g.fiber = 101;
+    await expect(save(invalid, 1)).rejects.toThrow();
+    expect(Number((await load()).revision)).toBe(1);
+    expect(completeBackupSchema.parse((await load()).backup).workspace.foods[0].per100g.fiber).toBeNull();
   });
   it('denies anonymous table and RPC access', async () => {
     await save(); await asUser('', false);

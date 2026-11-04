@@ -20,7 +20,7 @@ For a production build, run `npm run build`, then `npm start`. The Vercel projec
 | `/` | Actual daily nutrition, activity, weight, workout summary, and session resume |
 | `/onboarding` | Editable profile, timezone, independent nutrition targets and optional activity goals |
 | `/settings` | Profile editing, complete backup export/import, browser-data deletion |
-| `/food` | Searchable user food library, per-100-g source values, gram portions, diary edit/delete, immutable food snapshots |
+| `/food` | Searchable user food library, per-100-g source values, gram portions, live calorie/protein/fat/carb/fiber calculations, diary edit/delete, immutable food snapshots |
 | `/meals` | Seven-day navigation, editable meal ingredients, calculated nutrition and explicit ingredient logging |
 | `/workouts` | Editable four-day upper/lower plans and session history |
 | `/workouts/active` | Reps, kg, timed holds, rest timer, notes, resume, finish, and set corrections |
@@ -28,7 +28,7 @@ For a production build, run `npm run build`, then `npm start`. The Vercel projec
 | `/auth` | Email sign-in and manual account save/load/export/deletion when configured |
 | `/prototype` | Original tracker preserved with its separate storage key and legacy schema |
 
-Foods are entered by the user from packaging or reference values. Search searches that saved library; there is no external food database integration. Label-based records are user-entered values, not independently verified nutrition. Estimates are marked separately. Diary nutrition uses a saved food snapshot, so editing a library food does not rewrite previous meals. Planned meals reference current ingredient records; logging copies their current values into diary snapshots.
+Foods can be entered from packaging/reference values or added from eight bundled USDA FoodData Central starter entries. Each starter names its preparation state and source ID. Search searches the saved library; tracking makes no live requests to a food database. Label-based records are user-entered values, not independently verified nutrition. Estimates are marked separately. Diary nutrition uses a saved food snapshot, so editing a library food does not rewrite previous meals. Planned meals reference current ingredient records; logging copies their current values into diary snapshots.
 
 The supplied initial profile and targets remain editable preferences. The app does not calculate a medical calorie prescription. Missing activity/weight records remain unlogged; seven-day weight and food averages exclude missing days. Food targets are independent of workout energy. See [workout details](docs/workout-phase.md) for timers, logging conventions, and bounds.
 
@@ -43,7 +43,7 @@ Account synchronization is manual and replaces a complete account snapshot or co
 No Supabase migration has been applied by this change. The intended backend must be selected and authorized before activation. Do not copy an old app's environment files, keys, or database configuration.
 
 1. Confirm the intended Supabase project through the connected integration.
-2. Review and apply [the normalized migration](supabase/migrations/202611040001_fitness.sql). It creates named tables in `public`; it will fail rather than replace existing conflicting tables.
+2. Review and apply [the normalized migration](supabase/migrations/202611040001_fitness.sql), followed by [the fiber migration](supabase/migrations/202611040002_food_fiber.sql). It creates named tables in `public`; it will fail rather than replace existing conflicting tables.
 3. In Supabase Auth URL settings, set the site URL to `https://app.aifittraining.uk` and allow `https://app.aifittraining.uk/auth/callback`. Add a localhost callback only if local auth testing is needed.
 4. Configure these **public** values directly in Vercel's environment settings (and `.env.local` for local auth if needed):
 
@@ -74,10 +74,12 @@ PLAYWRIGHT_CHANNEL=chrome PLAYWRIGHT_PRODUCTION=1 npm run test:e2e -- --workers=
 
 Playwright uses port 3104. Set `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome. Alternatively run `npx playwright install chromium` and omit that variable. `PLAYWRIGHT_PRODUCTION=1` requires a completed build; otherwise the runner starts the development server.
 
-Validation includes 37 unit/database checks, 24 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
+Validation includes 42 unit/database checks, 28 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
 
 ## Phase status and next review
 
 See [the review handoff](docs/next-review.md). Profile, nutrition, meals, workouts, progress and local release checks are implemented. Normalized account storage and auth code are ready for hosted activation/verification. Optional AI remains disabled: no AI requests, API credentials, or paid resources were introduced. Enable that phase only after the core/hosted flows are verified and usage authorization is settled.
 
 The old `dineshu27/strato` repository, Vercel project `code`, and its deployments remain available. This repository's `supabase/schema.sql` belongs only to `/prototype`; do not apply it as the normalized production schema.
+
+Food portions scale each per-100-g value by grams ÷ 100. Fiber missing from an older food or snapshot remains unknown, not zero; totals are marked not recorded when any contributing food lacks fiber. Workout plan editors include upper/lower/core exercise selections and rounds (sets). Completed rounds can be logged together with identical reps/load; they remain individually editable. Rep totals and kg rep volume are calculated from the entered records, without inferring exercise calories.

@@ -75,6 +75,7 @@ export type WorkoutAction =
   | { type: 'save-plan'; plan: Plan }
   | { type: 'start'; planId: string; id: string; now: string }
   | { type: 'save-set'; sessionId: string; set: WorkoutSet }
+  | { type: 'log-rounds'; sessionId: string; exerciseId: string; amount: number; weightKg: number; ids: string[] }
   | { type: 'delete-set'; sessionId: string; setId: string }
   | { type: 'notes'; sessionId: string; notes: string }
   | { type: 'finish'; now: string }
@@ -102,6 +103,14 @@ export function workoutReducer(state: WorkoutState, action: WorkoutAction): Work
     }
     case 'save-set': next = updateSession(session => ({ ...session, sets: session.sets.some(set => set.id === action.set.id)
       ? session.sets.map(set => set.id === action.set.id ? action.set : set) : [...session.sets, action.set] }), action.sessionId); break;
+    case 'log-rounds': {
+      if (action.ids.length < 1 || action.ids.length > 10) throw new Error('Log between 1 and 10 completed rounds at a time.');
+      next = updateSession(session => {
+        const exercise = session.exercises.find(exercise => exercise.id === action.exerciseId);
+        if (!exercise || session.finishedAt) throw new Error('Choose an exercise in the active session.');
+        return { ...session, sets: [...session.sets, ...action.ids.map(id => ({ id, exerciseId: exercise.id, kind: exercise.kind, amount: action.amount, weightKg: action.weightKg }))] };
+      }, action.sessionId); break;
+    }
     case 'delete-set': next = updateSession(session => ({ ...session, sets: session.sets.filter(set => set.id !== action.setId) }), action.sessionId); break;
     case 'notes': next = updateSession(session => ({ ...session, notes: action.notes }), action.sessionId); break;
     case 'finish':

@@ -11,7 +11,7 @@ export const timeZoneSchema = z.string().max(80).refine(value => {
   try { new Intl.DateTimeFormat('en', { timeZone: value }).format(); return true; } catch { return false; }
 }, 'Use a valid timezone, for example Europe/London.');
 const nutrient = z.number().finite().min(0).max(100);
-export const nutritionSchema = z.object({ calories: z.number().finite().min(0).max(1000), protein: nutrient, fat: nutrient, carbs: nutrient });
+export const nutritionSchema = z.object({ calories: z.number().finite().min(0).max(1000), protein: nutrient, fat: nutrient, carbs: nutrient, fiber: nutrient.nullable().default(null) });
 export const foodSchema = z.object({
   id: identifier, name: text, brand: z.string().trim().max(100),
   per100g: nutritionSchema, source: z.enum(['estimated', 'label']),
@@ -64,7 +64,7 @@ export type DailyMetric = z.infer<typeof metricSchema>;
 export type Workspace = z.infer<typeof workspaceSchema>;
 export type Nutrition = z.infer<typeof nutritionSchema>;
 export const WORKSPACE_KEY = 'fittrack-workspace-v1';
-export const zeroNutrition = (): Nutrition => ({ calories: 0, protein: 0, fat: 0, carbs: 0 });
+export const zeroNutrition = (): Nutrition => ({ calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 });
 
 // Deliberately empty catalogue. Users enter actual packaging or reference values;
 // the app does not invent verified food composition or call an external food API.
@@ -79,9 +79,9 @@ export function todayInZone(timeZone: string, now = new Date()) {
 export function shiftDate(date: string, days: number) { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10); }
 export function mondayOf(date: string) { const day = new Date(`${date}T12:00:00Z`).getUTCDay(); return shiftDate(date, -((day + 6) % 7)); }
 export function nutritionFor(food: FoodRecord, grams: number): Nutrition {
-  return Object.fromEntries(Object.entries(food.per100g).map(([key, value]) => [key, value * grams / 100])) as Nutrition;
+  return Object.fromEntries(Object.entries(food.per100g).map(([key, value]) => [key, value === null ? null : value * grams / 100])) as Nutrition;
 }
-export function addNutrition(total: Nutrition, row: Nutrition): Nutrition { return { calories: total.calories + row.calories, protein: total.protein + row.protein, fat: total.fat + row.fat, carbs: total.carbs + row.carbs }; }
+export function addNutrition(total: Nutrition, row: Nutrition): Nutrition { return { calories: total.calories + row.calories, protein: total.protein + row.protein, fat: total.fat + row.fat, carbs: total.carbs + row.carbs, fiber: total.fiber === null || row.fiber === null ? null : total.fiber + row.fiber }; }
 export function dayNutrition(state: Workspace, date: string) { return state.logs.filter(log => log.date === date).reduce((total, log) => addNutrition(total, nutritionFor(log.food, log.grams)), zeroNutrition()); }
 export function mealNutrition(meal: PlannedMeal, foods: FoodRecord[]) { return meal.ingredients.reduce((total, ingredient) => { const food = foods.find(food => food.id === ingredient.foodId); return food ? addNutrition(total, nutritionFor(food, ingredient.grams)) : total; }, zeroNutrition()); }
 export function sevenDayWeight(weights: WeightRecord[], end: string) {

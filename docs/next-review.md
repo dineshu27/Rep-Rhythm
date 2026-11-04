@@ -14,7 +14,7 @@
 
 ## Verification
 
-Lint, TypeScript and the production build pass. All 37 unit/database checks and 26 browser/accessibility checks pass. Local PostgreSQL tests cover every normalized collection, RLS reads across all tables, denied cross-owner writes, anonymous denial, atomic rollback, stale revisions and recent-auth deletion. Offline reload preserves browser records. Production dependency audit: zero reported vulnerabilities; full development-tool audit has existing advisories.
+Lint, TypeScript and the production build pass. All 42 unit/database checks and 30 browser/accessibility checks pass. Local PostgreSQL tests cover every normalized collection, RLS reads across all tables, denied cross-owner writes, anonymous denial, atomic rollback, stale revisions and recent-auth deletion. Offline reload preserves browser records. Production dependency audit: zero reported vulnerabilities; full development-tool audit has existing advisories.
 
 ## Remaining external work
 
@@ -30,3 +30,9 @@ Open the live app, finish onboarding, create a food from a real package, log a p
 ## Rollback
 
 The previous Rep-Rhythm shell is commit `adff7a03728c83f440d5b3fff6aaca6711ee61c9`, deployment `dpl_J34kEZ2RFgCu1mD789KhB1ctPHFi`. The older app remains in Vercel project `code`, deployment `dpl_FP8mH5e2oWnn7MfFQE4ntoM9eeES` (`code-hbcvlrb1y-dineshu27s-projects.vercel.app`). Neither the `strato` repository nor those older projects/deployments have been deleted or changed by this implementation. Keep backups before any data restore; browser data is independent of deployment rollback.
+
+## Gram-based food and exercise update
+
+The food entry form now previews calories, protein, fat, carbs and fiber as grams change. Eight sourced USDA starter foods cover cooked rice, dry oats, raw chicken breast, apple, boiled chickpeas/lentils, hard-boiled egg and raw broccoli. Existing records without fiber load normally and are marked not recorded. The follow-up SQL migration preserves the same distinction.
+
+Workout editors now provide predefined upper/lower/core selections. Choose reps and rounds (sets) per exercise; completed rounds can be recorded together and edited individually afterward. The tracker computes total reps and kg rep volume.

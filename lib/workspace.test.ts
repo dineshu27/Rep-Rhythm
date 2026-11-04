@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dateSchema, dayNutrition, initialWorkspace, logPlannedMeal, mondayOf, nutritionFor, sevenDayWeight, shiftDate, todayInZone, workspaceSchema, type FoodRecord } from './workspace';
-const food: FoodRecord = { id: 'food', name: 'Test package', brand: '', per100g: { calories: 200, protein: 10, carbs: 20, fat: 5 }, source: 'label', reference: 'Test label' };
+const food: FoodRecord = { id: 'food', name: 'Test package', brand: '', per100g: { calories: 200, protein: 10, carbs: 20, fat: 5, fiber: 4 }, source: 'label', reference: 'Test label' };
 describe('workspace records and calculations', () => {
   it('validates real calendar dates and handles month/leap-year boundaries', () => {
     expect(dateSchema.safeParse('2026-02-30').success).toBe(false); expect(dateSchema.safeParse('2024-02-29').success).toBe(true);
@@ -10,7 +10,7 @@ describe('workspace records and calculations', () => {
     const instant = new Date('2026-07-01T23:30:00Z'); expect(todayInZone('Europe/London', instant)).toBe('2026-07-02'); expect(todayInZone('America/New_York', instant)).toBe('2026-07-01');
   });
   it('calculates gram portions without rounding away small amounts', () => {
-    expect(nutritionFor(food, 150)).toEqual({ calories: 300, protein: 15, carbs: 30, fat: 7.5 });
+    expect(nutritionFor(food, 150)).toEqual({ calories: 300, protein: 15, carbs: 30, fat: 7.5, fiber: 6 });
     expect(nutritionFor(food, 0.5).calories).toBe(1);
   });
   it('keeps diary snapshots when library foods change or are deleted', () => {
@@ -37,5 +37,16 @@ describe('workspace records and calculations', () => {
     const state = initialWorkspace(); state.profile.calories = 2100;
     expect(workspaceSchema.parse(state).profile.protein).toBe(130); expect(state.metrics).toHaveLength(0);
     state.metrics = [{ date: '2026-11-04', steps: 0, waterMl: 0, cardioMinutes: 0, notes: '' }]; expect(workspaceSchema.parse(state).metrics[0].steps).toBe(0);
+  });
+  it('keeps unknown legacy fiber distinct from a measured zero', () => {
+    const state = initialWorkspace();
+    const oldFood = { ...food, per100g: { calories: 200, protein: 10, carbs: 20, fat: 5 } };
+    const restored = workspaceSchema.parse({ ...state, foods: [oldFood], logs: [{ id: 'old', date: '2026-11-04', meal: 'Lunch', grams: 150, food: oldFood }] });
+    expect(restored.foods[0].per100g.fiber).toBeNull();
+    expect(dayNutrition(restored, '2026-11-04').fiber).toBeNull();
+    restored.logs.push({ id: 'known', date: '2026-11-04', meal: 'Snack', grams: 100, food });
+    expect(dayNutrition(restored, '2026-11-04').fiber).toBeNull();
+    restored.logs = [{ id: 'zero', date: '2026-11-04', meal: 'Lunch', grams: 150, food: { ...food, per100g: { ...food.per100g, fiber: 0 } } }];
+    expect(dayNutrition(restored, '2026-11-04').fiber).toBe(0);
   });
 });

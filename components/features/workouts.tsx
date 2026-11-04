@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { exerciseCatalogue, presetExercise } from '@/lib/exercise-catalog';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { ArrowRight, Check, ChevronDown, ChevronUp, Dumbbell, Plus, Timer, Trash2 } from 'lucide-react';
@@ -63,6 +64,7 @@ function PlanEditor({ plan }: { plan: Plan }) {
   const [draft, setDraft] = useState<Plan>(() => structuredClone(plan));
   const [message, setMessage] = useState('');
   const prefix = useId();
+  const [chosenPreset, setChosenPreset] = useState(exerciseCatalogue.find(exercise => exercise.body === (plan.id.startsWith('upper') ? 'upper' : 'lower'))!.id);
   function updateExercise(index: number, update: Partial<Exercise>) { setDraft(previous => ({ ...previous, exercises: previous.exercises.map((exercise, i) => i === index ? { ...exercise, ...update } : exercise) })); }
   function move(index: number, offset: number) {
     setDraft(previous => { const exercises = [...previous.exercises]; [exercises[index], exercises[index + offset]] = [exercises[index + offset], exercises[index]]; return { ...previous, exercises }; });
@@ -76,11 +78,12 @@ function PlanEditor({ plan }: { plan: Plan }) {
     <label>Plan name<input required maxLength={100} value={draft.name} onChange={event => setDraft({ ...draft, name: event.target.value })}/></label>
     <label>Training day<select value={draft.day} onChange={event => setDraft({ ...draft, day: event.target.value })}>{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => <option key={day}>{day}</option>)}</select></label>
     {draft.exercises.map((exercise, index) => <fieldset key={exercise.id}><legend>Exercise {index + 1}</legend>
-      <label htmlFor={`${prefix}-${exercise.id}`}>Exercise name</label><input id={`${prefix}-${exercise.id}`} required maxLength={100} value={exercise.name} onChange={event => updateExercise(index, { name: event.target.value })}/>
-      <div className="workout-fields"><label>Track<select value={exercise.kind} onChange={event => updateExercise(index, { kind: event.target.value as Exercise['kind'], target: event.target.value === 'seconds' ? '30' : '8–12' })}><option value="reps">Repetitions</option><option value="seconds">Timed hold (seconds)</option></select></label><label>Sets<input type="number" min={1} max={10} step={1} required value={Number.isNaN(exercise.sets) ? '' : exercise.sets} onChange={event => updateExercise(index, { sets: event.target.valueAsNumber })}/></label></div>
+      <label>Choose predefined exercise<select aria-label={`Choose predefined exercise ${index + 1}`} value={exerciseCatalogue.find(preset => preset.name === exercise.name)?.id ?? "custom"} onChange={event => { if (event.target.value !== "custom") { const chosen = presetExercise(event.target.value, exercise.id, exercise.sets); updateExercise(index, chosen); } else updateExercise(index, { name: "Custom exercise" }); }}><option value="custom">Custom / type a name below</option>{(['upper','lower','core'] as const).map(group => <optgroup key={group} label={group === 'core' ? 'Core / timed holds' : `${group === 'upper' ? 'Upper' : 'Lower'} body`}>{exerciseCatalogue.filter(preset => preset.body === group).map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</optgroup>)}</select></label><label htmlFor={`${prefix}-${exercise.id}`}>Exercise name</label><input id={`${prefix}-${exercise.id}`} required maxLength={100} value={exercise.name} onChange={event => updateExercise(index, { name: event.target.value })}/>
+      <div className="workout-fields"><label>Track<select value={exercise.kind} onChange={event => updateExercise(index, { kind: event.target.value as Exercise['kind'], target: event.target.value === 'seconds' ? '30' : '8–12' })}><option value="reps">Repetitions</option><option value="seconds">Timed hold (seconds)</option></select></label><label>Rounds (sets)<input type="number" min={1} max={10} step={1} required value={Number.isNaN(exercise.sets) ? '' : exercise.sets} onChange={event => updateExercise(index, { sets: event.target.valueAsNumber })}/></label></div>
       <div className="workout-fields"><label>{exercise.kind === 'seconds' ? 'Target seconds' : 'Target reps / range'}<input required maxLength={40} value={exercise.target} onChange={event => updateExercise(index, { target: event.target.value })}/></label><label>Rest (seconds)<input type="number" min={0} max={600} step={1} required value={Number.isNaN(exercise.restSeconds) ? '' : exercise.restSeconds} onChange={event => updateExercise(index, { restSeconds: event.target.valueAsNumber })}/></label></div>
       <div className="workout-actions"><button type="button" className="shell-icon" aria-label={`Move exercise ${index + 1} up`} disabled={index === 0} onClick={() => move(index, -1)}><ChevronUp size={16}/></button><button type="button" className="shell-icon" aria-label={`Move exercise ${index + 1} down`} disabled={index === draft.exercises.length - 1} onClick={() => move(index, 1)}><ChevronDown size={16}/></button><button type="button" className="shell-button shell-button-secondary" onClick={() => setDraft({ ...draft, exercises: draft.exercises.filter(item => item.id !== exercise.id) })}><Trash2 size={14}/> Remove exercise {index + 1}</button></div>
     </fieldset>)}
+    <div className="exercise-picker"><label>Add predefined exercise<select aria-label="Add predefined exercise" value={chosenPreset} onChange={event => setChosenPreset(event.target.value)}>{(['upper','lower','core'] as const).map(group => <optgroup key={group} label={group === 'core' ? 'Core / timed holds' : `${group === 'upper' ? 'Upper' : 'Lower'} body`}>{exerciseCatalogue.filter(preset => preset.body === group).map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</optgroup>)}</select></label><button type="button" className="shell-button shell-button-secondary" disabled={draft.exercises.length >= 30} onClick={() => setDraft({ ...draft, exercises: [...draft.exercises, presetExercise(chosenPreset, uid())] })}><Plus size={15}/> Add chosen exercise</button></div><p className="workout-muted">One round is one set of the chosen reps or seconds. Set rounds and targets separately for each exercise.</p>
     <div className="workout-actions"><button type="button" className="shell-button shell-button-secondary" disabled={draft.exercises.length >= 30} onClick={() => setDraft({ ...draft, exercises: [...draft.exercises, exerciseSchema.parse({ id: uid(), name: 'New exercise', kind: 'reps', sets: 3, target: '8–12', restSeconds: 90 })] })}><Plus size={15}/> Add exercise</button><button className="shell-button" type="submit">Save plan</button></div><p role="status">{message}</p>
   </form>;
 }
@@ -128,13 +131,18 @@ function SetForm({ session, exercise, existing, onSaved }: { session: Session; e
   const [amount, setAmount] = useState(String(existing?.amount ?? previous?.amount ?? ''));
   const [weight, setWeight] = useState(String(existing?.weightKg ?? previous?.weightKg ?? 0));
   const [started, setStarted] = useState<number | null>(null);
+  const [rounds, setRounds] = useState('1');
   const now = useClock();
   const holdSeconds = started === null ? 0 : Math.max(0, Math.floor((now - started) / 1000));
   const prefix = useId();
   function submit(event: FormEvent) {
     event.preventDefault();
     if (started !== null) return;
-    const success = dispatchWorkout({ type: 'save-set', sessionId: session.id, set: { id: existing?.id ?? uid(), exerciseId: exercise.id, kind: exercise.kind, amount: amount.trim() ? Number(amount) : NaN, weightKg: weight.trim() ? Number(weight) : NaN } });
+    const count = Number(rounds);
+    if (!Number.isInteger(count) || count < 1 || count > 10) return;
+    const success = existing
+      ? dispatchWorkout({ type: 'save-set', sessionId: session.id, set: { ...existing, amount: amount.trim() ? Number(amount) : NaN, weightKg: weight.trim() ? Number(weight) : NaN } })
+      : dispatchWorkout({ type: 'log-rounds', sessionId: session.id, exerciseId: exercise.id, amount: amount.trim() ? Number(amount) : NaN, weightKg: weight.trim() ? Number(weight) : NaN, ids: Array.from({ length: count }, () => uid()) });
     if (success) {
       if (!existing && exercise.restSeconds > 0) dispatchWorkout({ type: 'rest', until: Date.now() + exercise.restSeconds * 1000 });
       onSaved?.();
@@ -142,11 +150,13 @@ function SetForm({ session, exercise, existing, onSaved }: { session: Session; e
   }
   return <form onSubmit={submit} className="workout-form workout-log-form" aria-label={`${existing ? 'Edit' : 'Log'} set for ${exercise.name}`}>
     <div className="workout-fields"><label htmlFor={`${prefix}-amount`}>{exercise.kind === 'seconds' ? 'Seconds' : 'Reps'}</label><label htmlFor={`${prefix}-weight`}>Weight (kg)</label><input id={`${prefix}-amount`} aria-label={`${exercise.name} ${exercise.kind === 'seconds' ? 'seconds' : 'reps'}`} type="number" min={1} max={exercise.kind === 'seconds' ? 36000 : 1000} step={1} required disabled={started !== null} value={amount} onChange={event => setAmount(event.target.value)}/><input id={`${prefix}-weight`} aria-label={`${exercise.name} weight in kg`} type="number" min={0} max={1000} step="any" required value={weight} onChange={event => setWeight(event.target.value)}/></div>
+    {!existing && <label>Completed rounds<input aria-label={`${exercise.name} completed rounds`} type="number" min={1} max={10} step={1} required value={rounds} onChange={event => setRounds(event.target.value)}/></label>}
+    {Number(amount) > 0 && Number.isFinite(Number(amount)) && Number.isFinite(Number(weight)) && Number(rounds) >= 1 && Number(rounds) <= 10 && <p className="workout-muted" role="status">{exercise.kind === 'reps' ? `${Number(amount) * (existing ? 1 : Number(rounds))} total reps · ${Math.round(Number(amount) * (existing ? 1 : Number(rounds)) * Number(weight) * 100) / 100} kg rep volume` : `${Number(amount) * (existing ? 1 : Number(rounds))} total hold seconds`}{!existing && Number(rounds) > 1 ? ' · Same values will be logged for each completed round.' : ''}</p>}
     {exercise.kind === 'seconds' && !existing && <div className="workout-actions"><button type="button" className="shell-button shell-button-secondary" onClick={() => {
       if (started === null) setStarted(Date.now());
       else { setAmount(String(Math.max(1, Math.floor((Date.now() - started) / 1000)))); setStarted(null); }
     }}><Timer size={15}/>{started === null ? 'Start hold timer' : `Stop hold · ${formatTime(holdSeconds)}`}</button></div>}
-    <button type="submit" className="shell-button" disabled={started !== null}><Check size={15}/>{existing ? 'Save set changes' : 'Log set'}</button>
+    <button type="submit" className="shell-button" disabled={started !== null}><Check size={15}/>{existing ? 'Save set changes' : Number(rounds) > 1 ? `Log ${rounds} rounds` : 'Log set'}</button>
   </form>;
 }
 
