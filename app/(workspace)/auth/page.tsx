@@ -1,5 +1,2 @@
-import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { hasSupabaseConfiguration } from '@/lib/config/environment';
-export default function AuthPage() { const configured = hasSupabaseConfiguration(); return <><div className="shell-page-heading"><span className="shell-overline">YOUR PERSONAL WORKSPACE</span><h1>A home for your healthy habits.</h1><p>Authentication and onboarding are scheduled for Phase 2.</p></div><Card className="shell-placeholder"><CardHeader><span className="shell-feature-icon"><ShieldCheck size={26}/></span><CardTitle>{configured ? 'Configuration supplied' : 'Local preview is ready'}</CardTitle></CardHeader><CardContent><p className="shell-copy">{configured ? 'Supabase credentials are present. Server-side authentication and access checks have not been implemented in this shell.' : 'You can explore the app without a Supabase account. Cloud sign-in will become available after Supabase configuration and server-side authentication are complete.'}</p><p className="shell-fine-print">The shell does not collect credentials or upload health data.</p><Link className="shell-button" href="/">Explore the dashboard</Link></CardContent></Card></>; }
+import { Account } from '@/components/features/account';
+export default function Page() { return <Account/>; }

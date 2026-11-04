@@ -1,3 +1,15 @@
-// Install @playwright/test and Chromium before running npm run test:e2e.
 import { defineConfig, devices } from '@playwright/test';
-export default defineConfig({ testDir:'./tests/e2e',fullyParallel:true,forbidOnly:!!process.env.CI,retries:process.env.CI ? 2 : 0,reporter:'list',use:{baseURL:'http://127.0.0.1:3000',trace:'retain-on-failure'},projects:[{name:'desktop-chromium',use:{...devices['Desktop Chrome']}},{name:'mobile-chromium',use:{...devices['Pixel 7']}}],webServer:{command:'npm run dev -- --hostname 127.0.0.1',url:'http://127.0.0.1:3000',reuseExistingServer:!process.env.CI,timeout:120000} });
+const baseURL = 'http://127.0.0.1:3104';
+export default defineConfig({
+  testDir: './tests/e2e', fullyParallel: true, forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0, reporter: 'list',
+  use: { baseURL, trace: 'retain-on-failure', channel: process.env.PLAYWRIGHT_CHANNEL || undefined },
+  projects: [
+    { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
+  ],
+  webServer: {
+    command: process.env.PLAYWRIGHT_PRODUCTION ? 'npm start -- --hostname 127.0.0.1 --port 3104' : 'npm run dev -- --hostname 127.0.0.1 --port 3104',
+    url: baseURL, reuseExistingServer: !process.env.CI, timeout: 120000,
+  },
+});

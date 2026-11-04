@@ -1,0 +1,30 @@
+/* Public application shell only: account/auth/API responses are never cached. */
+const SHELL = 'fittrack-shell-20261104';
+const ASSETS = 'fittrack-assets-20261104';
+const PAGES = ['/', '/food', '/meals', '/workouts', '/workouts/active', '/progress', '/settings', '/onboarding'];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(SHELL).then(async cache => {
+    await cache.addAll([...PAGES, '/offline.html', '/icon.svg', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/icon-maskable.png', '/apple-touch-icon.png']);
+    const assets = new Set();
+    for (const page of PAGES) { const response = await cache.match(page); const html = await response.text(); for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+)"/g)) assets.add(match[1].replaceAll('&amp;', '&')); }
+    await (await caches.open(ASSETS)).addAll([...assets]);
+  }).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('fittrack-') && key !== SHELL && key !== ASSETS).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth')) return;
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(caches.open(ASSETS).then(async cache => { const cached = await cache.match(event.request); if (cached) return cached; const response = await fetch(event.request); if (response.ok) await cache.put(event.request, response.clone()); return response; }));
+    return;
+  }
+  if (PAGES.includes(url.pathname) && event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      const cache = await caches.open(SHELL);
+      try { const response = await fetch(event.request); if (response.ok) await cache.put(url.pathname, response.clone()); return response; }
+      catch { return (await cache.match(url.pathname)) || (await cache.match('/offline.html')); }
+    })());
+  }
+});

@@ -20,13 +20,13 @@ test('theme choice survives a reload', async ({page}) => {
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme',next);
 });
-test('all routes render without pretending tracking is implemented', async ({page}) => {
+test('all feature routes and the not-found screen render', async ({page}) => {
   for (const route of ['/meals','/workouts','/workouts/active','/progress','/settings','/onboarding','/auth']) {
     await page.goto(route);
     await expect(page.locator('main h1')).toBeVisible();
   }
   await page.goto('/food');
-  await expect(page.getByText('Planned · Phase 3')).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Food diary',exact:true})).toBeVisible();
   await page.goto('/does-not-exist');
   await expect(page.getByRole('heading',{name:'Let’s get you back on track.'})).toBeVisible();
 });

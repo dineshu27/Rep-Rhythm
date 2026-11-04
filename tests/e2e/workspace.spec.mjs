@@ -1,0 +1,102 @@
+import { test, expect } from '@playwright/test';
+
+test('food snapshots, ingredient meals, and diary totals stay consistent', async ({ page }) => {
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto('/food');
+  const date = await page.getByLabel('Diary date', { exact: true }).inputValue();
+  await page.getByRole('button', { name: 'Add food', exact: false }).click();
+  const add = page.getByRole('form', { name: 'Add food', exact: true });
+  await add.getByLabel('Food name', { exact: true }).fill('Test oats');
+  for (const [label, value] of [['Energy (kcal) per 100 g', '200'], ['Protein (g) per 100 g', '10'], ['Fat (g) per 100 g', '5'], ['Carbs (g) per 100 g', '25']]) await add.getByLabel(label, { exact: true }).fill(value);
+  await add.getByLabel('Source or package description', { exact: true }).fill('Test package label');
+  await add.getByLabel('Nutrition source', { exact: true }).selectOption('label');
+  await add.getByRole('button', { name: 'Save food', exact: true }).click();
+  const entry = page.getByRole('form', { name: 'Food entry', exact: true });
+  await entry.getByLabel('Portion (g)', { exact: true }).fill('150');
+  await entry.getByRole('button', { name: 'Log food', exact: true }).click();
+  await expect(page.locator('.feature-totals')).toContainText('300 kcal');
+  await page.getByRole('button', { name: 'Edit food', exact: true }).click();
+  const editFood = page.getByRole('form', { name: 'Edit food', exact: true });
+  await editFood.getByLabel('Energy (kcal) per 100 g', { exact: true }).fill('400');
+  await editFood.getByRole('button', { name: 'Save food', exact: true }).click();
+  await expect(page.locator('.feature-totals')).toContainText('300 kcal');
+  await page.getByRole('button', { name: 'Edit entry', exact: true }).click();
+  await entry.getByLabel('Portion (g)', { exact: true }).fill('200');
+  await entry.getByRole('button', { name: 'Save entry changes', exact: true }).click();
+  await expect(page.locator('.feature-totals')).toContainText('400 kcal');
+  await page.goto('/meals');
+  await page.getByRole('button', { name: 'Plan a meal', exact: false }).click();
+  const meal = page.getByRole('form', { name: 'Meal plan', exact: true });
+  await meal.getByLabel('Meal name', { exact: true }).fill('Oat bowl');
+  await meal.getByLabel('Planned date', { exact: true }).fill(date);
+  await meal.getByLabel('Ingredient grams', { exact: true }).fill('50');
+  await meal.getByRole('button', { name: 'Save planned meal', exact: true }).click();
+  await expect(page.getByText('Oat bowl', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Log ingredients', exact: true }).click();
+  await page.goto('/food');
+  await expect(page.locator('.feature-totals')).toContainText('600 kcal');
+  await expect(page.locator('.feature-totals')).toContainText('2 food entries');
+  await page.getByRole('button', { name: 'Delete Test oats', exact: true }).click();
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Remove this food from planned meals');
+  await page.reload();
+  await expect(page.locator('.feature-totals')).toContainText('600 kcal');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('onboarding, measurements, activity and full backup recovery', async ({ page }) => {
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto('/onboarding');
+  await page.getByLabel('Profile name', { exact: true }).fill('My test profile');
+  await page.getByLabel('Calories (kcal)', { exact: true }).fill('2000');
+  await page.getByLabel('Water goal (ml, optional)', { exact: true }).fill('2200');
+  await page.getByLabel('Step goal (optional)', { exact: true }).fill('9000');
+  await page.getByRole('button', { name: 'Save and start tracking', exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText('Not logged · target 2000', { exact: true })).toBeVisible();
+  await page.goto('/progress');
+  await page.getByLabel('Weight (kg)', { exact: true }).fill('72.4');
+  await page.getByLabel('Waist (cm, optional)', { exact: true }).fill('84');
+  await page.getByRole('button', { name: 'Save measurement', exact: true }).click();
+  await page.getByLabel('Daily steps', { exact: true }).fill('6000');
+  await page.getByLabel('Water (ml)', { exact: true }).fill('1800');
+  await page.getByLabel('Cardio / recovery (minutes)', { exact: true }).fill('20');
+  await page.getByRole('button', { name: 'Save daily activity', exact: true }).click();
+  await page.reload();
+  await expect(page.getByRole('img', { name: 'Weight measurements over time', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Daily steps', { exact: true })).toHaveValue('6000');
+  await page.goto('/settings');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export all data', exact: false }).click();
+  const download = await downloadPromise; const stream = await download.createReadStream();
+  const chunks = []; for await (const chunk of stream) chunks.push(chunk); const backup = Buffer.concat(chunks);
+  expect(JSON.parse(backup).workspace.weights).toHaveLength(1);
+  await page.getByRole('button', { name: 'Delete workspace data', exact: true }).click();
+  await expect(page.getByLabel('Profile name', { exact: true })).toHaveValue('My profile');
+  await page.locator('input[type=file]').setInputFiles({ name: 'complete.json', mimeType: 'application/json', buffer: backup });
+  await expect(page.getByLabel('Profile name', { exact: true })).toHaveValue('My test profile');
+  await page.goto('/progress');
+  await expect(page.getByLabel('Daily steps', { exact: true })).toHaveValue('6000');
+  await expect(page.getByLabel('Weight (kg)', { exact: true })).toHaveValue('72.4');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('account APIs reject foreign-origin mutations and require configuration', async ({ request }) => {
+  const auth = await request.get('/api/auth'); expect(await auth.json()).toEqual({ configured: false, email: null });
+  const forbidden = await request.put('/api/account', { headers: { Origin: 'https://foreign.example' }, data: {} }); expect(forbidden.status()).toBe(403);
+  const account = await request.get('/api/account'); expect(account.status()).toBe(503);
+});
+
+test('installed public shell reloads offline with browser records', async ({ page, context }) => {
+  test.skip(!process.env.PLAYWRIGHT_PRODUCTION, 'Service worker is registered in production only.');
+  await page.goto('/onboarding');
+  await page.getByLabel('Profile name', { exact: true }).fill('Offline profile');
+  await page.getByRole('button', { name: 'Save and start tracking', exact: true }).click();
+  await page.goto('/settings');
+  await page.getByLabel('Profile name', { exact: true }).waitFor();
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })); });
+  // Allow every route/chunk used here to be fetched before cutting the connection.
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByLabel('Profile name', { exact: true })).toHaveValue('Offline profile');
+  await context.setOffline(false);
+});
