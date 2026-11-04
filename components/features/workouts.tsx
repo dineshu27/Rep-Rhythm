@@ -47,7 +47,7 @@ function Planner({ state }: { state: WorkoutState }) {
   const router = useRouter();
   return <>
     {state.active && <section className="workout-resume"><div><span className="shell-overline">SESSION IN PROGRESS</span><h2>{state.active.name}</h2><p>{state.active.sets.length} sets logged · Started {dateLabel(state.active.startedAt)}</p></div><Link href="/workouts/active" className="shell-button">Resume workout <ArrowRight size={16}/></Link></section>}
-    <div className="workout-plan-grid">{state.plans.map(plan => <section className="workout-panel" key={plan.id}>
+    <div className="workout-plan-grid">{state.plans.map(plan => <section className="workout-panel workout-plan-card" data-body={plan.id.startsWith('lower') ? 'lower' : 'upper'} key={plan.id}>
       <div className="workout-card-heading"><span className="shell-overline">{plan.day}</span><Dumbbell size={20} aria-hidden="true"/></div><h2>{plan.name}</h2><p className="workout-muted">{plan.exercises.length} exercises · {plan.exercises.reduce((total, exercise) => total + exercise.sets, 0)} planned sets</p>
       <ol className="workout-exercise-preview">{plan.exercises.map(exercise => <li key={exercise.id}><span>{exercise.name}</span><small>{exercise.sets} × {exercise.target} {exercise.kind === 'seconds' ? 'sec' : 'reps'}</small></li>)}</ol>
       {!plan.exercises.length && <p className="workout-muted">Add an exercise to start this plan.</p>}

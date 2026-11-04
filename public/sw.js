@@ -1,6 +1,6 @@
 /* Public application shell only: account/auth/API responses are never cached. */
-const SHELL = 'fittrack-shell-20261104-assistant-v4';
-const ASSETS = 'fittrack-assets-20261104-assistant-v4';
+const SHELL = 'fittrack-shell-20261104-premium-v5';
+const ASSETS = 'fittrack-assets-20261104-premium-v5';
 const PAGES = ['/', '/food', '/meals', '/workouts', '/workouts/active', '/progress', '/settings', '/onboarding'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(SHELL).then(async cache => {
