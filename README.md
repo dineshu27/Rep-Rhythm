@@ -19,6 +19,7 @@ For a production build, run `npm run build`, then `npm start`. The Vercel projec
 | --- | --- |
 | `/` | Actual daily nutrition, activity, weight, workout summary, and session resume |
 | `/onboarding` | Editable profile, timezone, independent nutrition targets and optional activity goals |
+| `/assistant` | Reviewable food logging, workout suggestions, meal ideas and weekly coaching; live AI requires activation |
 | `/settings` | Profile editing, complete backup export/import, browser-data deletion |
 | `/food` | Searchable user food library, per-100-g source values, gram portions, live calorie/protein/fat/carb/fiber calculations, diary edit/delete, immutable food snapshots |
 | `/meals` | Seven-day navigation, editable meal ingredients, calculated nutrition and explicit ingredient logging |
@@ -78,7 +79,7 @@ Validation includes 52 unit/database checks, 36 feature browser checks and two a
 
 ## Phase status and next review
 
-See [the review handoff](docs/next-review.md). Profile, nutrition, meals, workouts, progress and local release checks are implemented. Normalized account storage and auth code are ready for hosted activation/verification. Optional AI remains disabled: no AI requests, API credentials, or paid resources were introduced. Enable that phase only after the core/hosted flows are verified and usage authorization is settled.
+See [the review handoff](docs/next-review.md). Profile, nutrition, meals, workouts, progress and local release checks are implemented. Normalized account storage and auth code are ready for hosted activation/verification. The AI assistant now has four reviewable tools, a server-only OpenAI integration and durable usage controls. Live AI remains disabled; no paid model calls, API credentials or paid resources were introduced. Free examples are labelled explicitly. See [AI activation and privacy details](docs/ai-assistant.md). Hosted sign-in, quota migration and a real provider round-trip require secure configuration and explicit cost approval.
 
 The old `dineshu27/strato` repository, Vercel project `code`, and its deployments remain available. This repository's `supabase/schema.sql` belongs only to `/prototype`; do not apply it as the normalized production schema.
 

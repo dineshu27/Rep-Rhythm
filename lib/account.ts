@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { serverSupabase } from './supabase/server';
 
 export { completeBackupSchema } from './backup-schema';
-export function sameOrigin(request: Request) { return request.headers.get('origin') === new URL(request.url).origin; }
+export function sameOrigin(request: Request) {
+  const url = new URL(request.url); const origin = request.headers.get('origin');
+  // Next.js may normalize the internal URL hostname. The HTTP Host is the
+  // browser-facing authority; do not accept untrusted forwarded-host headers.
+  return origin === url.origin || (request.headers.has('host') && origin === `${url.protocol}//${request.headers.get('host')}`);
+}
 export async function accountClient() {
   const client = await serverSupabase();
   if (!client) return { client: null, user: null, response: NextResponse.json({ error: 'Cloud configuration is not available. Browser tracking still works.' }, { status: 503 }) };

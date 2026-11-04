@@ -20,3 +20,16 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .nutrition-values{display:flex;flex-wrap:wrap;gap:5px 14px}.nutrition-values>span{white-space:nowrap}.portion-preview{border:1px solid var(--border);background:var(--soft);padding:16px;border-radius:10px;display:grid;gap:12px;font-size:12px}.portion-preview>strong{font-size:12px;font-weight:500}.exercise-picker{display:grid;gap:12px;padding:15px;border:1px solid var(--border);border-radius:10px}@media(min-width:1024px){.nutrition-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 
 .food-search-form{grid-template-columns:minmax(0,1fr);align-items:end}.food-search-form>.shell-button{width:100%}.food-search>p[role=status]{margin-top:14px}.food-search-results .workout-actions{align-items:flex-start;flex-direction:column}.food-search-results .workout-actions small{font-size:10px;color:var(--muted-foreground)}@media(min-width:640px){.food-search-form{grid-template-columns:minmax(0,1fr) auto}}
+
+.assistant-tabs,.assistant-actions {display:flex;flex-wrap:wrap;gap:1rem;align-items:center;margin:1rem 0}
+.assistant-form {display:grid;gap:1rem;max-width:50rem}
+.assistant-form label,.assistant-review label {display:grid;gap:.4rem;min-width:0}
+.assistant-form input:not([type=checkbox]),.assistant-form textarea,.assistant-form select,.assistant-review input:not([type=checkbox]),.assistant-review select {width:100%;max-width:100%;padding:.7rem;border:1px solid var(--border,#aaa);border-radius:.5rem;background:var(--card);color:var(--foreground);font:inherit}
+.assistant-consent {display:flex!important;align-items:flex-start;gap:.65rem!important}
+.assistant-consent input {margin-top:.25rem;flex-shrink:0}
+.assistant-food {min-width:0;margin:1.5rem 0;padding:1rem;border:1px solid var(--border,#aaa);border-radius:.6rem;display:grid;gap:1rem}
+.assistant-review p {overflow-wrap:anywhere}
+.assistant-review legend {font-weight:700}
+.assistant-actions label {flex:1;min-width:5rem}
+.assistant-form textarea {resize:vertical}
+button:disabled {cursor:not-allowed;opacity:.55}

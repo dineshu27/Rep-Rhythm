@@ -5,6 +5,7 @@ export const navigation = [
   { href: '/workouts', label: 'Workout planner', icon: 'workouts' },
   { href: '/workouts/active', label: 'Active workout', icon: 'active' },
   { href: '/progress', label: 'Progress', icon: 'progress' },
+  { href: '/assistant', label: 'AI assistant', icon: 'assistant' },
   { href: '/settings', label: 'Settings', icon: 'settings' },
 ] as const;
 export function isActiveRoute(pathname: string, href: string) { return pathname === href; }
