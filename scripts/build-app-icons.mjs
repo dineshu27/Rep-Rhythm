@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { readFile, writeFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const svg = await readFile(new URL('public/icon.svg', root));
-const background = '#201035';
+const background = '#140b24';
 for (const [file, size] of [['favicon-16x16.png',16], ['favicon-32x32.png',32], ['icon-192.png',192], ['icon-512.png',512], ['apple-touch-icon.png',180]]) {
   let icon = sharp(svg).resize(size,size);
   if (file === 'apple-touch-icon.png') icon = icon.flatten({background});
