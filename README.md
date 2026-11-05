@@ -1,4 +1,4 @@
-# AIFit / Rep-Rhythm
+# FitAi / Rep-Rhythm
 
 A Next.js fitness workspace for profile preferences, food and meal planning, workouts, and progress. Core tracking works without Supabase configuration and stores records in the current browser. Optional account storage uses normalized PostgreSQL tables and Supabase authentication.
 

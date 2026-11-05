@@ -1,4 +1,4 @@
-// Derive app icons from the AIFit source artwork. Sharp ships with Next.js.
+// Derive app icons from the FitAi source artwork. Sharp ships with Next.js.
 import sharp from 'sharp';
 import { readFile, writeFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
@@ -9,7 +9,7 @@ for (const [file, size] of [['favicon-16x16.png',16], ['favicon-32x32.png',32], 
   if (file === 'apple-touch-icon.png') icon = icon.flatten({background});
   await icon.png().toFile(new URL(`public/${file}`,root).pathname);
 }
-// Add a small safe inset so Android masks preserve both AI letters and the weights.
+// Add a small safe inset so Android masks preserve the flexed arm and FitAi lettering.
 await sharp(source).resize(480,480).extend({top:16,bottom:16,left:16,right:16,background}).flatten({background}).png().toFile(new URL('public/icon-maskable.png',root).pathname);
 // A conventional multi-resolution ICO containing 32-bit DIB images, including
 // bottom-up BGRA pixels and an AND transparency mask for older icon readers.
