@@ -1,30 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
 <defs>
-  <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#392053"/><stop offset=".55" stop-color="#211132"/><stop offset="1" stop-color="#140b24"/></linearGradient>
-  <radialGradient id="aura" cx=".3" cy=".2" r=".85"><stop stop-color="#c369ff" stop-opacity=".3"/><stop offset="1" stop-color="#8532c6" stop-opacity="0"/></radialGradient>
-  <linearGradient id="steel" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#f2ddff"/><stop offset=".45" stop-color="#c79af2"/><stop offset="1" stop-color="#9052d1"/></linearGradient>
-  <linearGradient id="grip" x1=".1" y1="0" x2=".8" y2="1"><stop stop-color="#fff8ff"/><stop offset=".55" stop-color="#f0ddff"/><stop offset="1" stop-color="#c294f0"/></linearGradient>
-  <linearGradient id="facet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ad71e1"/><stop offset="1" stop-color="#613292"/></linearGradient>
+ <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#472473"/><stop offset=".55" stop-color="#221037"/><stop offset="1" stop-color="#140b24"/></linearGradient>
+ <radialGradient id="glow" cx=".2" cy=".1" r="1"><stop stop-color="#d99dff" stop-opacity=".22"/><stop offset="1" stop-color="#a361f0" stop-opacity="0"/></radialGradient>
+ <linearGradient id="letter" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fffaff"/><stop offset=".6" stop-color="#eedcff"/><stop offset="1" stop-color="#bc88ef"/></linearGradient>
+ <linearGradient id="energy" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ab63f3"/><stop offset="1" stop-color="#e2b9ff"/></linearGradient>
 </defs>
 <rect width="512" height="512" rx="112" fill="url(#tile)"/>
-<rect width="512" height="512" rx="112" fill="url(#aura)"/>
-<rect x="13" y="13" width="486" height="486" rx="101" fill="none" stroke="#e0c1ff" stroke-opacity=".12" stroke-width="2"/>
-<path d="M81 375L340 94l65 49-260 283z" fill="#a65ce6" opacity=".08"/>
-<g transform="rotate(-21 256 256)">
-  <g fill="#60348d" transform="translate(5 9)"><path d="M111 155h19v93h-19l-10-11v-71zM142 132h20l12 12v115l-12 12h-20l-12-12V144zM350 132h20l12 12v115l-12 12h-20l-12-12V144zM382 155h19l10 11v71l-10 11h-19z"/></g>
-  <path d="M164 186h182v31H164z" fill="url(#steel)"/>
-  <g fill="url(#steel)"><path d="M111 155h19v93h-19l-10-11v-71zM142 132h20l12 12v115l-12 12h-20l-12-12V144zM350 132h20l12 12v115l-12 12h-20l-12-12V144zM382 155h19l10 11v71l-10 11h-19z"/></g>
-  <path d="M142 140v120M350 140v120" stroke="#fff4ff" stroke-opacity=".55" stroke-width="4"/>
-  <path d="M183 387l19-81-29-40v-57l20-20v-22l13-12h19l13 12 12-12h20l13 13v23l13-13 19 10 28 32-10 28-29 37-20 34-9 51-45 42z" fill="#582b79"/>
-  <path d="M178 382l19-81-31-41v-49l20-21v-24l14-13h21l13 12 13-12h21l13 13v23l15-13 19 9 27 33-10 28-30 37-17 34-9 52-46 41z" fill="url(#grip)"/>
-  <path d="M186 190l15-9v45l-15 13zM220 159l14 6v54l-14 12zM254 158l14-5 13 13v23l-27 25z" fill="url(#facet)"/>
-  <path d="M315 196l-44 42-34-27-15 14 35 37h22l49-42z" fill="#452455"/>
-  <path d="M316 202l-43 42-29-23 13 24 19 8 42-33z" fill="#ad76dc"/>
-  <path d="M197 301l44-29 29 9-42 32-15 61-35 8z" fill="#b782e3"/>
-  <path d="M228 313l42-32 15 36-9 52-46 41-17-36z" fill="url(#grip)"/>
-  <path d="M215 351l64-16-4 21-66 17z" fill="#39204d"/>
-  <path d="M230 410l46-41-1 17-44 38-21-15z" fill="#9a60d0"/>
+<rect width="512" height="512" rx="112" fill="url(#glow)"/>
+<rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#edceff" stroke-opacity=".16" stroke-width="2"/>
+<!-- An ascending orbit frames the bespoke AI letterforms. -->
+<path d="M85 346C48 228 133 107 255 94" fill="none" stroke="#d3a0ff" stroke-opacity=".14" stroke-width="3"/>
+<path d="M271 411c93-5 158-67 164-145" fill="none" stroke="#d3a0ff" stroke-opacity=".2" stroke-width="3"/>
+<!-- Custom A: its rising crossbar points toward the dumbbell I. -->
+<path fill="url(#letter)" fill-rule="evenodd" d="M113 315l71-172h37l72 172h-48l-15-37h-58l-14 37zm74-74h29l-15-42z"/>
+<path d="M169 271l65-22 11 28h-73z" fill="url(#energy)"/>
+<!-- Weight plates become the serifs of the I. -->
+<path d="M305 147h53v32h-15v101h15v32h-53v-32h15V179h-15z" fill="url(#letter)"/>
+<path d="M298 155h7v16h-7zM358 155h7v16h-7zM298 288h7v16h-7zM358 288h7v16h-7z" fill="#b47ae9"/>
+<path d="M327 190h9v79h-9z" fill="#b780e9" opacity=".5"/>
+<!-- A four-point intelligence spark, kept inside the maskable safe area. -->
+<path d="M365 112l6 15 15 6-15 6-6 15-6-15-15-6 15-6z" fill="#e9c5ff"/>
+<!-- FIT lettering as paths, with no font dependency. -->
+<g fill="#dcc3f4">
+ <path d="M185 342h35v9h-25v10h22v9h-22v17h-10z"/>
+ <path d="M239 342h10v45h-10z"/>
+ <path d="M266 342h39v9h-14v36h-11v-36h-14z"/>
 </g>
-<path d="M359 347l30-12-17 37-31 13z" fill="#dea8ff"/>
-<path d="M374 390l16-7-9 19-17 7z" fill="#a66be2"/>
 </svg>
