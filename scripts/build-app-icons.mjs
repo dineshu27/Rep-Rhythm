@@ -3,22 +3,19 @@ import sharp from 'sharp';
 import { readFile, writeFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const source = await readFile(new URL('public/aifit-icon-source.png', root));
-const metadata = await sharp(source).metadata();
-// Keep just the ribbon emblem at tiny favicon sizes; text is used on app icons.
-const favicon = await sharp(source).extract({ left: Math.round(metadata.width * .125), top: Math.round(metadata.height * .10), width: Math.round(metadata.width * .75), height: Math.round(metadata.height * .56) }).png().toBuffer();
 const background = '#100010';
 for (const [file, size] of [['favicon-16x16.png',16], ['favicon-32x32.png',32], ['icon-192.png',192], ['icon-512.png',512], ['apple-touch-icon.png',180]]) {
-  let icon = sharp(file.startsWith('favicon-') ? favicon : source).resize(size,size,{fit:'contain',background});
+  let icon = sharp(source).resize(size,size,{fit:'contain',background});
   if (file === 'apple-touch-icon.png') icon = icon.flatten({background});
   await icon.png().toFile(new URL(`public/${file}`,root).pathname);
 }
-// Let Android apply its own icon shape. Keep the mark inside its safe area.
-await sharp(source).resize(410,410).extend({top:51,bottom:51,left:51,right:51,background}).png().toFile(new URL('public/icon-maskable.png',root).pathname);
+// The source keeps the complete abstract mark inside the Android safe circle.
+await sharp(source).resize(512,512).flatten({background}).png().toFile(new URL('public/icon-maskable.png',root).pathname);
 // A conventional multi-resolution ICO containing 32-bit DIB images, including
 // bottom-up BGRA pixels and an AND transparency mask for older icon readers.
 const sizes = [16,32,48]; const entries=[]; const images=[]; let offset=6+16*sizes.length;
 for(const size of sizes) {
-  const {data}=await sharp(favicon).resize(size,size,{fit:'contain',background}).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const {data}=await sharp(source).resize(size,size,{fit:'contain',background}).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   const maskStride=Math.ceil(size/32)*4;
   const image=Buffer.alloc(40+size*size*4+maskStride*size);
   image.writeUInt32LE(40,0); image.writeInt32LE(size,4); image.writeInt32LE(size*2,8); image.writeUInt16LE(1,12); image.writeUInt16LE(32,14); image.writeUInt32LE(size*size*4+maskStride*size,20);

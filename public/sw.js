@@ -1,8 +1,8 @@
 /* Public application shell only: account/auth/API responses are never cached. */
-const SHELL = 'fittrack-shell-20261105-ribbon-weekday-v12';
-const ASSETS = 'fittrack-assets-20261105-ribbon-weekday-v12';
+const SHELL = 'fittrack-shell-20261105-motion-v13';
+const ASSETS = 'fittrack-assets-20261105-motion-v13';
 const PAGES = ['/', '/food', '/meals', '/workouts', '/workouts/active', '/progress', '/settings', '/onboarding'];
-const PUBLIC_ASSETS = ['/offline.html', '/favicon.ico', '/favicon-16x16.png?v=aift-ribbon-6', '/favicon-32x32.png?v=aift-ribbon-6', '/icon-512.png?v=aift-ribbon-6', '/manifest.webmanifest', '/icon-192.png?v=aift-ribbon-6', '/icon-512.png?v=aift-ribbon-6', '/icon-maskable.png?v=aift-ribbon-6', '/apple-touch-icon.png?v=aift-ribbon-6'];
+const PUBLIC_ASSETS = ['/offline.html', '/favicon.ico', '/favicon-16x16.png?v=aift-motion-7', '/favicon-32x32.png?v=aift-motion-7', '/manifest.webmanifest', '/icon-192.png?v=aift-motion-7', '/icon-512.png?v=aift-motion-7', '/icon-maskable.png?v=aift-motion-7', '/apple-touch-icon.png?v=aift-motion-7'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(SHELL).then(async cache => {
     await cache.addAll([...PAGES, ...PUBLIC_ASSETS]);
