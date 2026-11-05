@@ -48,6 +48,7 @@ export function WorkoutWorkspace({ active = false }: { active?: boolean }) {
 
 function Planner({ state }: { state: WorkoutState }) {
   const router = useRouter();
+  const [savedPlan, setSavedPlan] = useState<{ id: string; day: string } | null>(null);
   return <>
     <TrainingSchedule state={state}/>
     {state.active && <section className="workout-resume"><div><span className="shell-overline">SESSION IN PROGRESS</span><h2>{state.active.name}</h2><p>{state.active.sets.length} sets logged · Started {dateLabel(state.active.startedAt)}</p></div><Link href="/workouts/active" className="shell-button">Resume workout <ArrowRight size={16}/></Link></section>}
@@ -58,13 +59,13 @@ function Planner({ state }: { state: WorkoutState }) {
       <div className="workout-actions"><button className="shell-button" disabled={!!state.active || !plan.exercises.length} onClick={() => {
         if (dispatchWorkout({ type: 'start', planId: plan.id, id: uid(), now: new Date().toISOString() })) router.push('/workouts/active');
       }}>Start {plan.name} <ArrowRight size={15}/></button></div>
-      <button className="shell-text-link remove-plan" disabled={state.plans.length <= 1 || state.active?.planId === plan.id} onClick={() => { if (confirm(`Remove ${plan.name} from your weekly plans? Completed history stays available.`)) dispatchWorkout({ type: 'delete-plan', planId: plan.id }); }}>Remove training day</button><details className="workout-plan-editor"><summary>Edit plan</summary><PlanEditor key={JSON.stringify(plan)} plan={plan}/></details>
+      <button className="shell-text-link remove-plan" disabled={state.plans.length <= 1 || state.active?.planId === plan.id} onClick={() => { if (confirm(`Remove ${plan.name} from your weekly plans? Completed history stays available.`)) dispatchWorkout({ type: 'delete-plan', planId: plan.id }); }}>Remove training day</button><details className="workout-plan-editor"><summary>Edit plan</summary><PlanEditor key={JSON.stringify(plan)} plan={plan} onSaved={saved => setSavedPlan({ id: saved.id, day: saved.day })}/></details>{savedPlan?.id === plan.id && savedPlan.day === plan.day && <p role="status" className="workout-muted">Plan saved for {plan.day}. Existing sessions keep their original exercise details.</p>}
     </section>)}</div>
     <section className="workout-panel workout-recovery"><span className="shell-overline">BETWEEN GYM DAYS</span><h2>Room to recover</h2><p>Between training days, make room for rest, an easy walk, or optional cardio. Your plan is a starting point: adjust exercises, sets, targets, and rest to suit you.</p><p>Warm up before lifting and choose a load you can control. For exercises using two dumbbells, log their combined weight consistently. Enter 0 kg for unweighted sets.</p><a className="shell-text-link" href="https://www.nhs.uk/live-well/exercise/how-to-improve-strength-flexibility/" target="_blank" rel="noreferrer">NHS strength and flexibility guidance ↗</a></section>
   </>;
 }
 
-function PlanEditor({ plan }: { plan: Plan }) {
+function PlanEditor({ plan, onSaved }: { plan: Plan; onSaved: (plan: Plan) => void }) {
   const [draft, setDraft] = useState<Plan>(() => structuredClone(plan));
   const [message, setMessage] = useState('');
   const prefix = useId();
@@ -74,14 +75,20 @@ function PlanEditor({ plan }: { plan: Plan }) {
   function move(index: number, offset: number) {
     setDraft(previous => { const exercises = [...previous.exercises]; [exercises[index], exercises[index + offset]] = [exercises[index + offset], exercises[index]]; return { ...previous, exercises }; });
   }
-  function submit(event: FormEvent) {
-    event.preventDefault(); const result = planSchema.safeParse(draft);
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const result = planSchema.safeParse({ ...draft, day: new FormData(form).get("day") });
     if (!result.success) { setMessage(result.error.issues[0]?.message ?? 'Check the plan values.'); return; }
-    if (dispatchWorkout({ type: 'save-plan', plan: result.data })) setMessage('Plan saved. Existing sessions keep their original exercise details.');
+    if (dispatchWorkout({ type: 'save-plan', plan: result.data })) {
+      onSaved(result.data);
+      const details = form.closest('details');
+      if (details) details.open = false;
+    } else setMessage('Plan was not saved. Check the storage message above and try again.');
   }
-  return <form onSubmit={submit} className="workout-form">
+  return <form onSubmit={submit} onInvalidCapture={() => setMessage("Plan was not saved. Check the highlighted fields, then save again.")} className="workout-form">
     <div className="muscle-picker" role="group" aria-label="Muscles to train together"><strong>Muscles to train together</strong><div>{muscleGroups.map(muscle => <label key={muscle}><input type="checkbox" checked={selectedMuscles.includes(muscle)} onChange={event => setSelectedMuscles(current => event.target.checked ? [...current, muscle] : current.filter(item => item !== muscle))}/>{muscle}</label>)}</div><button type="button" className="shell-button shell-button-secondary" disabled={!selectedMuscles.length} onClick={() => setDraft({ ...draft, exercises: selectedMuscles.map(muscle => presetExercise(exerciseCatalogue.find(row => row.muscle === muscle)!.id, uid())) })}>Fill selected muscles</button><p className="workout-muted">Replaces this draft with one starter exercise per selected muscle. Review and save the plan below.</p></div><label>Plan name<input required maxLength={100} value={draft.name} onChange={event => setDraft({ ...draft, name: event.target.value })}/></label>
-    <label>Training day<select value={draft.day} onChange={event => setDraft({ ...draft, day: event.target.value })}>{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => <option key={day}>{day}</option>)}</select></label>
+    <label>Training day<select name="day" aria-label="Training day" value={draft.day} onChange={event => setDraft({ ...draft, day: event.target.value })}>{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => <option key={day}>{day}</option>)}</select></label>
     {draft.exercises.map((exercise, index) => <fieldset key={exercise.id}><legend>Exercise {index + 1}</legend>
       <label>Choose predefined exercise<select aria-label={`Choose predefined exercise ${index + 1}`} value={exerciseCatalogue.find(preset => preset.name === exercise.name)?.id ?? "custom"} onChange={event => { if (event.target.value !== "custom") { const chosen = presetExercise(event.target.value, exercise.id, exercise.sets); updateExercise(index, chosen); } else updateExercise(index, { name: "Custom exercise" }); }}><option value="custom">Custom / type a name below</option>{muscleGroups.map(group => <optgroup key={group} label={group}>{exerciseCatalogue.filter(preset => preset.muscle === group).map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</optgroup>)}</select></label><label htmlFor={`${prefix}-${exercise.id}`}>Exercise name</label><input id={`${prefix}-${exercise.id}`} required maxLength={100} value={exercise.name} onChange={event => updateExercise(index, { name: event.target.value })}/>
       <div className="workout-fields"><label>Track<select value={exercise.kind} onChange={event => updateExercise(index, { kind: event.target.value as Exercise['kind'], target: event.target.value === 'seconds' ? '30' : '8–12' })}><option value="reps">Repetitions</option><option value="seconds">Timed hold (seconds)</option></select></label><label>Rounds (sets)<input type="number" min={1} max={10} step={1} required value={Number.isNaN(exercise.sets) ? '' : exercise.sets} onChange={event => updateExercise(index, { sets: event.target.valueAsNumber })}/></label></div>

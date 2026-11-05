@@ -125,3 +125,25 @@ test('workout changes synchronize between open tabs', async ({ page, context, is
   await expect(page.getByText('3 / 18 planned sets', { exact: false })).toBeVisible();
   await second.close();
 });
+
+
+test('rescheduling Monday to Tuesday updates the saved header, coverage, other tabs and reloads', async ({page, context}) => {
+ await page.goto('/workouts');
+ const other = await context.newPage(); await other.goto('/workouts');
+ const card = page.locator('.workout-plan-card').first();
+ await expect(card.locator('.workout-card-heading')).toHaveText('Monday');
+ await card.getByText('Edit plan', {exact:true}).click();
+ await card.getByLabel('Training day', {exact:true}).selectOption('Tuesday');
+ await card.getByRole('button', {name:'Save plan',exact:true}).click();
+ await expect(card.locator('.workout-card-heading')).toHaveText('Tuesday');
+ await expect(card.getByRole('status')).toContainText('Plan saved for Tuesday');
+ await expect(card.locator('details')).not.toHaveAttribute('open');
+ await expect(page.getByLabel('Chest, Monday: not planned',{exact:true})).toBeVisible();
+ await expect(page.getByLabel('Chest, Tuesday: planned',{exact:true})).toBeVisible();
+ await expect(other.locator('.workout-plan-card').first().locator('.workout-card-heading')).toHaveText('Tuesday');
+ await page.reload();
+ await expect(card.locator('.workout-card-heading')).toHaveText('Tuesday');
+ await card.getByText('Edit plan',{exact:true}).click();
+ await expect(card.getByLabel('Training day',{exact:true})).toHaveValue('Tuesday');
+ await other.close();
+});
