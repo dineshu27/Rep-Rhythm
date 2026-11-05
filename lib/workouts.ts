@@ -72,6 +72,9 @@ export function initialWorkouts(): WorkoutState {
 }
 
 export type WorkoutAction =
+  | { type: 'add-plan'; plan: Plan }
+  | { type: 'delete-plan'; planId: string }
+  | { type: 'replace-plans'; plans: Plan[] }
   | { type: 'save-plan'; plan: Plan }
   | { type: 'start'; planId: string; id: string; now: string }
   | { type: 'save-set'; sessionId: string; set: WorkoutSet }
@@ -91,6 +94,14 @@ export function workoutReducer(state: WorkoutState, action: WorkoutAction): Work
       history: state.history.map(session => session.id === sessionId ? update(session) : session) };
   }
   switch (action.type) {
+    case 'add-plan': next = { ...state, plans: [...state.plans, planSchema.parse(action.plan)] }; break;
+    case 'delete-plan':
+      if (state.plans.length <= 1 || state.active?.planId === action.planId) throw new Error('Keep at least one plan and finish an active session before removing its plan.');
+      if (!state.plans.some(plan => plan.id === action.planId)) throw new Error('Plan no longer exists.');
+      next = { ...state, plans: state.plans.filter(plan => plan.id !== action.planId) }; break;
+    case 'replace-plans':
+      if (state.active) throw new Error('Finish or discard your active session before replacing the weekly split.');
+      next = { ...state, plans: action.plans.map(plan => planSchema.parse(plan)) }; break;
     case 'save-plan':
       if (!state.plans.some(plan => plan.id === action.plan.id)) throw new Error('Plan no longer exists.');
       next = { ...state, plans: state.plans.map(plan => plan.id === action.plan.id ? planSchema.parse(action.plan) : plan) }; break;

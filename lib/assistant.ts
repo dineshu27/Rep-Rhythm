@@ -7,6 +7,8 @@ export const assistantModes = ['food', 'workout', 'meals', 'review'] as const;
 export type AssistantMode = typeof assistantModes[number];
 export const aiRequestSchema = z.object({
   mode: z.enum(assistantModes), description: z.string().trim().min(3).max(2000), consent: z.literal(true),
+  provider: z.enum(['openai', 'anthropic']).optional(), usePersonalKey: z.boolean().optional(), billingConsent: z.boolean().optional(),
+  history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(2000) })).max(8).optional(),
   facts: z.array(z.object({ id: z.string().max(60), value: z.string().max(250) })).max(15),
 });
 export const aiDraftSchema = z.object({

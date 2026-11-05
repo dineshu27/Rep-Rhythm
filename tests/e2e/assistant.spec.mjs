@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 test('assistant is honestly disabled; examples require review before saving', async ({ page }) => {
   await page.goto('/assistant');
-  await expect(page.getByRole('button', { name: 'Generate draft', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Send message', exact: true })).toBeDisabled();
   await expect(page.getByText('Live AI is not enabled.', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Try example (no AI call)' }).click();
   const draft = page.getByRole('region', { name: 'Review draft' });
@@ -43,9 +43,9 @@ test('live workflow shares only consented text and leaves missing grams for revi
     await route.fulfill({ json: { message: 'Please weigh your portion.', foods: [{ query: 'banana', grams: null, note: 'No weight supplied.' }], exercises: [], tips: [], matches: [[]] } });
   });
   await page.goto('/assistant'); await page.getByLabel('Your request', { exact: true }).fill('I ate a banana');
-  const generate = page.getByRole('button', { name: 'Generate draft', exact: true }); await expect(generate).toBeDisabled();
+  const generate = page.getByRole('button', { name: 'Send message', exact: true }); await expect(generate).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Send this request', exact: false }).check(); await generate.click();
-  await expect(page.getByText('Please weigh your portion.')).toBeVisible();
+  await expect(page.getByRole('log', { name: 'Assistant conversation' })).toContainText('Please weigh your portion.');
   expect(submitted).toEqual({ mode: 'food', description: 'I ate a banana', consent: true, facts: [] });
   await expect(page.getByLabel('Grams for banana', { exact: true })).toHaveValue('');
   await page.getByRole('button', { name: 'Save reviewed foods to diary' }).click(); await expect(page.getByRole('main').getByRole('alert')).toContainText('Choose a matching food');

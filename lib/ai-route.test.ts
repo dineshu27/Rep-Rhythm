@@ -21,3 +21,5 @@ it('accepts the browser-facing Host when Next normalizes its internal URL, but r
   expect((await POST(req('http://127.0.0.1:3104', { host: '127.0.0.1:3104' }))).status).toBe(503);
   expect((await POST(req('https://foreign.example', { host: 'app.aifittraining.uk', 'x-forwarded-host': 'foreign.example' }))).status).toBe(403);
 });
+
+it('does not silently use the shared OpenAI key when Anthropic was requested', async () => { expect((await post({ ...input, provider: 'anthropic' })).status).toBe(400); expect(mocks.generate).not.toHaveBeenCalled(); });

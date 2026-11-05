@@ -3,6 +3,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { initialWorkspace } from './workspace';
 import { initialWorkouts, workoutReducer } from './workouts';
+import { buildSplit } from './muscles';
 import { completeBackupSchema } from './backup-schema';
 
 const a = '11111111-1111-4111-8111-111111111111';
@@ -97,4 +98,11 @@ describe('normalized PostgreSQL storage and owner boundaries', () => {
     await db.exec('reset role'); expect((await db.query('select * from auth.users')).rows).toEqual([{ id: b }]);
     await asUser(b); expect(completeBackupSchema.parse((await load()).backup).workspace.foods).toHaveLength(1);
   });
+  it('roundtrips new split plans while retaining snapshots whose original plan was removed', async () => {
+    const input = backup(); input.workouts.active = null; let count = 0; input.workouts.plans = buildSplit('pair-repeat', () => `split-${++count}`);
+    await save(input); const restored = completeBackupSchema.parse((await load()).backup);
+    expect(restored.workouts.plans).toHaveLength(6); expect(restored.workouts.history).toEqual(input.workouts.history);
+    expect(restored.workouts.plans.some(plan => plan.id === restored.workouts.history[0].planId)).toBe(false);
+  });
+
 });

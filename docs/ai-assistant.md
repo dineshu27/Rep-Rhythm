@@ -1,5 +1,7 @@
 # AI assistant
 
+The assistant now supports a conversation interface and two separate credential paths. Personal OpenAI or Anthropic keys work without Supabase: see [personal AI connections](personal-ai.md). The original app-funded OpenAI path below remains disabled unless its approval, account and quota requirements are configured.
+
 Four reviewable tools: text-to-food diary, workout suggestions from the exercise catalogue, ingredient-based meal ideas, and weekly coaching from a displayed seven-day summary. No records or targets are changed until explicit save. Example mode uses canned drafts, clearly marked; it makes no model calls. The food example can be saved as a real entry, only after review.
 
 Food nutrition comes from matched USDA records or the user's existing library, never model-generated calories. Missing weighed portions remain blank and block saving. Preparation and recipe matches need user review. Meal idea portions are suggestions, not measured intake. Exercise suggestions use catalogue IDs, reps/seconds, rounds and rest, never prescribed loads. Saving replaces the selected plan only after confirmation; session snapshots are preserved.
@@ -14,7 +16,7 @@ The owner has required approval before paid usage. Do not enable these flags bef
 4. Grant only intended users `app_metadata.ai_access: true` through the Supabase administrative dashboard/API. `user_metadata` is not accepted. Never place an administrative Supabase key in this app.
 5. Set `AI_PAID_USAGE_APPROVED=true` and `AI_ENABLED=true` in Vercel production only after approval, redeploy, verify `/api/ai`, then perform one approved live draft request. Leave previews disabled unless separately intended.
 
-Model: `gpt-5.4-mini`, OpenAI Responses API, structured output, 2,500 maximum output tokens, 30-second timeout, no automatic retry and `store:false`. User requests are capped at 16,384 bytes, descriptions at 2,000 characters. A sign-in, owner-granted AI access, explicit sharing checkbox, same-origin request and database quota reservation are required before every provider request.
+Model: `gpt-5.4-mini`, OpenAI Responses API, structured output, 2,500 maximum output tokens, 30-second timeout, no automatic retry and `store:false`. User requests are capped at 24,576 bytes, descriptions at 2,000 characters. A sign-in, owner-granted AI access, explicit sharing checkbox, same-origin request and database quota reservation are required before every provider request.
 
 The database serializes reservations with an advisory lock: 5 attempts per UTC day per approved user and 50 per UTC month across the entire app. Failures/timeouts count because a provider call may have incurred usage. Reservations are not linked to replaceable profile rows. Account deletion anonymizes reservations, preserving the global monthly allowance; only request ID, account ID until deletion, mode and timestamp are stored. No prompt, response, health records or API keys enter this ledger. Users cannot insert, edit or delete ledger rows. Service-role/owner access remains administrative.
 

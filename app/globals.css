@@ -3,4 +3,5 @@
 @import "./base.css";
 @import "./premium.css";
 @import "./violet.css";
+@import "./options.css";
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

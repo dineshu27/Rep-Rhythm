@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { AIConnections } from './ai-connections';
+import { AppearancePreferences } from './appearance';
 import { PageSignature } from './page-signature';
 import { DailyBrief } from './daily-brief';
 import { FoodSearch } from './food-search';
@@ -27,7 +29,7 @@ export function WorkspacePage({ view }: { view: 'dashboard' | 'profile' | 'onboa
   const headings = { dashboard: ['Your space to make progress.', 'Real records. One day at a time.'], profile: ['Your profile & settings', 'Your preferences, goals, and data controls.'], onboarding: ['Your starting point', 'Make the workspace yours. You can change these preferences later.'], food: ['Food diary', 'Log your portions and keep a clear nutrition history.'], meals: ['Meal planner', 'Plan seven days around foods you actually use.'], progress: ['Progress', 'Your measurements, daily habits, and weekly trends.'] };
   return <div className="feature-page" data-page={view}><Heading title={headings[view][0]} description={headings[view][1]}/>{view !== 'dashboard' && <PageSignature kind={view}/>}{['food', 'meals', 'progress'].includes(view) && <Link className="shell-text-link" href={`/assistant?mode=${view === 'meals' ? 'meals' : view === 'progress' ? 'review' : 'food'}`}>Open AI assistant →</Link>}{error && <div className="workout-notice" role="alert">{error}</div>}{!data ? <section className="workout-panel"><p>{error ? 'Open Settings for data recovery.' : 'Loading your workspace…'}</p>{view === 'profile' && <DataControls data={null}/>}</section> : <>
     {view === 'dashboard' && <Dashboard data={data}/>}
-    {(view === 'profile' || view === 'onboarding') && <><ProfileEditor key={JSON.stringify(data.profile)} profile={data.profile} onboarding={view === 'onboarding'}/>{view === 'profile' && <DataControls data={data}/>}</>}
+    {(view === 'profile' || view === 'onboarding') && <>{view === 'profile' && <AppearancePreferences/>}<ProfileEditor key={JSON.stringify(data.profile)} profile={data.profile} onboarding={view === 'onboarding'}/>{view === 'profile' && <><AIConnections/><DataControls data={data}/></>}</>}
     {view === 'food' && <FoodDiary data={data}/>}
     {view === 'meals' && <MealPlanner data={data}/>}
     {view === 'progress' && <Progress data={data}/>}

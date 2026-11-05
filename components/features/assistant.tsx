@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { PageSignature } from './page-signature';
+import { AIConnections } from './ai-connections';
 import { useEffect, useRef, useState } from 'react';
 import { assistantModes, matchedDraftSchema, applyFoodDraft, suggestedPlan, weeklyFacts, type AssistantMode, type MatchedDraft } from '@/lib/assistant';
 import { useWorkspace, changeWorkspace } from '@/lib/workspace-store';
@@ -10,10 +10,14 @@ import { todayInZone, nutritionFor, type FoodRecord } from '@/lib/workspace';
 import { NutritionValues } from './nutrition-values';
 
 const titles = { food: 'Describe a meal', workout: 'Suggest a workout', meals: 'Create a meal idea', review: 'Review my week' };
-const prompts = { food: 'For example: 150 g cooked rice, 100 g grilled chicken and 10 g olive oil. Include weighed grams and preparation.', workout: 'Tell me upper or lower body, equipment, experience, time available and any limitations.', meals: 'List available ingredients, diet, allergies and meal preferences. Suggested portions are editable.', review: 'Ask about consistency, food tracking or training. The seven-day summary below is shared only when you generate.' };
+type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string; context?: string; delivered?: boolean; example?: boolean };
+const starters = { food: ['150 g cooked rice, 100 g grilled chicken and 10 g olive oil', 'Help me work out what details I need to log breakfast'], workout: ['Suggest chest and shoulder exercises with dumbbells', 'Help me train each muscle group on two days this week'], meals: ['Suggest a meal using rice, eggs and spinach', 'Give me a vegetarian lunch idea with weighed portions'], review: ['Help me reflect on this week’s consistency', 'What should I focus on recording next week?'] };
+const prompts = { food: 'For example: 150 g cooked rice, 100 g grilled chicken and 10 g olive oil. Include weighed grams and preparation.', workout: 'Tell me the muscles you want to pair, your equipment, experience, time available and any limitations.', meals: 'List available ingredients, diet, allergies and meal preferences. Suggested portions are editable.', review: 'Ask about consistency, food tracking or training. The seven-day summary below is shared only when you generate.' };
 export function Assistant({ mode }: { mode: AssistantMode }) {
   const workspace = useWorkspace(); const workouts = useWorkouts();
-  const [status, setStatus] = useState<{ ready: boolean; reason: string; quota?: { dailyRemaining: number; monthlyRemaining: number } }>({ ready: false, reason: 'Checking AI availability…' });
+  const [status, setStatus] = useState<{ ready: boolean; reason: string; personal?: boolean; providers?: { openai: boolean; anthropic: boolean }; quota?: { dailyRemaining: number; monthlyRemaining: number } }>({ ready: false, reason: 'Checking AI availability…' });
+  const [provider, setProvider] = useState<'openai' | 'anthropic'>('openai'); const [billingConsent, setBillingConsent] = useState(false);
+  const [conversation, setConversation] = useState<ChatMessage[]>([]); const logRef = useRef<HTMLDivElement>(null); const abortRef = useRef<AbortController | null>(null);
   const [description, setDescription] = useState(''); const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false); const busyRef = useRef(false);
   const [draft, setDraft] = useState<MatchedDraft | null>(null); const [example, setExample] = useState(false);
@@ -21,20 +25,31 @@ export function Assistant({ mode }: { mode: AssistantMode }) {
   const [rows, setRows] = useState<{ food: FoodRecord | null; grams: string; include: boolean }[]>([]);
   const [date, setDate] = useState(''); const [meal, setMeal] = useState<'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'>('Lunch');
   const [mealName, setMealName] = useState('Meal idea'); const [planId, setPlanId] = useState('');
-  useEffect(() => { let cancelled = false; fetch('/api/ai', { cache: 'no-store' }).then(response => response.json()).then(value => { if (!cancelled) setStatus(value); }).catch(() => { if (!cancelled) setStatus({ ready: false, reason: 'Could not check AI availability. Connect and retry.' }); }); return () => { cancelled = true; }; }, []);
+  useEffect(() => { let cancelled = false; const refresh = () => { fetch('/api/ai', { cache: 'no-store' }).then(response => response.json()).then(value => { if (!cancelled) setStatus(value); }).catch(() => { if (!cancelled) setStatus({ ready: false, reason: 'Could not check AI availability. Connect and retry.' }); }); }; refresh(); window.addEventListener('fittrack-ai-connections', refresh); return () => { cancelled = true; window.removeEventListener('fittrack-ai-connections', refresh); abortRef.current?.abort(); }; }, []);
+  useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [conversation, busy]);
+  const selectedReady = status.personal ? !!status.providers?.[provider] : status.ready && provider === 'openai';
+
   const today = workspace.data ? todayInZone(workspace.data.profile.timeZone) : '';
   const facts = workspace.data && workouts.data && mode === 'review' ? weeklyFacts(workspace.data, workouts.data, date || today) : [];
   async function generate(isExample: boolean) {
-    if (busyRef.current) return;
+    if (busyRef.current || (!isExample && (!selectedReady || !consent || (status.personal && !billingConsent) || description.trim().length < 3))) return;
+    if (!isExample && /sk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}/.test(description)) { setDescription(''); setError('Enter API keys only in the secure connection form. This text was not added to the conversation.'); return; }
     busyRef.current = true; setBusy(true); setError(''); setMessage(''); setDraft(null);
+    const userId = crypto.randomUUID(); const userText = isExample ? 'Show me a clearly labelled example.' : description.trim();
+    const history = conversation.filter(row => !row.example && (row.role === 'assistant' || row.delivered)).slice(-8).map(row => ({ role: row.role, content: (row.context || row.content).slice(0, 2000) }));
+    setConversation(current => [...current, { id: userId, role: 'user' as const, content: userText, example: isExample, delivered: false }].slice(-30));
+    const controller = new AbortController(); abortRef.current = controller;
     try {
-      const response = await fetch(isExample ? `/api/ai?example=${mode}` : '/api/ai', isExample ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, description, consent, facts }) });
-      const value = await response.json(); if (!response.ok) throw new Error(value.error || 'Could not generate a draft.');
+      const response = await fetch(isExample ? `/api/ai?example=${mode}` : '/api/ai', isExample ? { cache: 'no-store', signal: controller.signal } : { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, description: userText, consent, facts, ...(history.length ? { history } : {}), ...(status.personal ? { provider, usePersonalKey: true, billingConsent } : {}) }) });
+      const value = await response.json(); if (!response.ok) throw new Error(value.error || 'Could not generate a reply.');
       const next = matchedDraftSchema.parse(value);
-      setDraft(next); setExample(isExample); setRows(next.foods.map((row, index) => ({ food: next.matches[index]?.[0] ?? null, grams: row.grams === null ? '' : String(row.grams), include: true })));
-    } catch (error) { setError(error instanceof Error && !error.message.startsWith('[') ? error.message : 'The draft could not be read. Nothing was saved.'); }
-    finally { setBusy(false); busyRef.current = false; }
+      const context = [next.message, ...next.foods.map(row => `${row.query}: ${row.grams ?? 'unknown'} grams`), ...next.exercises.map(row => `${exerciseCatalogue.find(item => item.id === row.presetId)?.name}: ${row.rounds} rounds, target ${row.amount}`), ...next.tips.map(row => row.text)].join('\n').slice(0, 2000);
+      setConversation(current => [...current.map(row => row.id === userId ? { ...row, delivered: true } : row), { id: crypto.randomUUID(), role: 'assistant' as const, content: next.message || 'Your draft is ready for review below.', context, example: isExample }].slice(-30));
+      setDraft(next); setExample(isExample); setRows(next.foods.map((row, index) => ({ food: next.matches[index]?.[0] ?? null, grams: row.grams === null ? '' : String(row.grams), include: true }))); if (!isExample) setDescription('');
+    } catch (error) { setError(error instanceof Error && error.name === 'AbortError' ? 'Stopped waiting. A request already sent may still incur provider charges.' : error instanceof Error && !error.message.startsWith('[') ? error.message : 'The reply could not be read. Nothing was saved.'); }
+    finally { setBusy(false); busyRef.current = false; abortRef.current = null; }
   }
+
   function saveFood() {
     if (!draft) return;
     const included = rows.filter(row => row.include);
@@ -49,16 +64,19 @@ export function Assistant({ mode }: { mode: AssistantMode }) {
     try { if (dispatchWorkout({ type: 'save-plan', plan: suggestedPlan(plan, draft, () => crypto.randomUUID()) })) { setDraft(null); setMessage('Reviewed exercises saved to your plan.'); } } catch { setError('Check the exercise values before saving.'); }
   }
   return <div className="feature-page" data-page="assistant"><div className="shell-page-heading"><div><span className="shell-overline">DRAFT · REVIEW · SAVE</span><h1>Your AI assistant</h1><p>Turn everyday descriptions into records and practical next steps.</p></div></div>
-    <PageSignature kind="assistant"/><nav className="assistant-tabs" aria-label="Assistant tools">{assistantModes.map(item => <Link className={item === mode ? 'shell-button' : 'shell-text-link'} aria-current={item === mode ? 'page' : undefined} href={`/assistant?mode=${item}`} key={item}>{titles[item]}</Link>)}</nav>
-    <section className="workout-panel"><h2>{titles[mode]}</h2><p role="status">{status.reason}</p>{status.quota && <p>{status.quota.dailyRemaining} attempts left today · {status.quota.monthlyRemaining} left this month across the app</p>}<p>{prompts[mode]}</p>
-      <form className="assistant-form" onSubmit={event => { event.preventDefault(); void generate(false); }}>
-        <label>Your request<textarea required minLength={3} maxLength={2000} rows={4} value={description} onChange={event => setDescription(event.target.value)}/></label>
-        {mode === 'review' && <><label>Week ending<input type="date" required value={date || today} onChange={event => { setDate(event.target.value); setDraft(null); }}/></label><details><summary>Review the summary that will be shared</summary><dl>{facts.map(fact => <div key={fact.id}><dt>{fact.id}</dt><dd>{fact.value}</dd></div>)}</dl></details></>}
-        <label className="assistant-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)}/> Send this request{mode === 'review' ? ' and the displayed weekly summary' : ''} to OpenAI. It may contain health information. Only include details you want to share.</label>
-        <p className="workout-muted">Drafts are not saved automatically. No photos, account details or saved private notes are uploaded automatically. AI can make mistakes; review food preparation, portions and exercise suitability.</p>
-        <div className="assistant-actions"><button className="shell-button" type="submit" disabled={!status.ready || !consent || busy || !workspace.data || !workouts.data}>{busy ? 'Preparing draft…' : 'Generate draft'}</button><button className="shell-text-link" type="button" disabled={busy} onClick={() => void generate(true)}>Try example (no AI call)</button></div>
+    <div className="assistant-workbench"><aside className="chat-tools" aria-label="Chat tools"><div><span className="shell-overline">YOUR AI WORKSPACE</span><h2>What’s on your mind?</h2></div><nav className="assistant-tabs" aria-label="Assistant tools">{assistantModes.map(item => <Link className={item === mode ? 'shell-button' : 'shell-text-link'} aria-current={item === mode ? 'page' : undefined} href={`/assistant?mode=${item}`} key={item}>{titles[item]}</Link>)}</nav><label>Chat provider<select aria-label="Chat provider" disabled={busy} value={provider} onChange={event => { setProvider(event.target.value as typeof provider); setConsent(false); setBillingConsent(false); }}><option value="openai">OpenAI · GPT-5.4 mini</option><option value="anthropic">Anthropic · Claude Sonnet 5.5</option></select></label><button type="button" className="shell-button shell-button-secondary" disabled={busy} onClick={() => { setConversation([]); setDraft(null); setDescription(''); setError(''); setMessage(''); }}>New conversation</button><p className="workout-muted">This chat stays in memory for this page session. Only the latest eight completed messages are sent as context. Examples are excluded.</p><Link className="shell-text-link" href="#ai-connections">Connect or remove an API key ↓</Link></aside>
+    <section className="workout-panel chat-panel" aria-label="AI chat"><header className="chat-panel-heading"><div><span className="shell-overline">LET’S WORK THROUGH IT</span><h2>{titles[mode]}</h2></div><span className="shell-badge">{provider === 'openai' ? 'OpenAI' : 'Anthropic'}</span></header><p role="status" className="chat-service-status">{status.reason}</p>{status.personal && !status.providers?.[provider] && <p className="workout-muted">Connect an {provider === 'openai' ? 'OpenAI' : 'Anthropic'} key below to use this provider.</p>}{status.quota && <p className="workout-muted">{status.quota.dailyRemaining} attempts left today · {status.quota.monthlyRemaining} left this month across the app</p>}
+    <div className="chat-transcript" role="log" aria-label="Assistant conversation" aria-live="polite" ref={logRef}>{conversation.length ? conversation.map(row => <article key={row.id} className={`chat-message chat-${row.role}`}><span>{row.role === 'user' ? 'You' : 'FitTrack assistant'}{row.example ? ' · example' : ''}</span><p>{row.content}</p>{row.role === 'user' && !row.delivered && !busy && <small>Request not completed</small>}</article>) : <div className="chat-welcome"><span className="chat-welcome-mark">✦</span><h3>A little clarity for your next step.</h3><p>{prompts[mode]}</p><div className="chat-starters">{starters[mode].map(text => <button type="button" key={text} onClick={() => setDescription(text)}>{text}<span aria-hidden="true">↗</span></button>)}</div></div>}{busy && <p className="chat-thinking" role="status">Assistant is preparing your reply…</p>}</div>
+      <form className="assistant-form chat-composer" onSubmit={event => { event.preventDefault(); void generate(false); }}>
+        {mode === 'review' && <><label>Week ending<input type="date" required value={date || today} onChange={event => { setDate(event.target.value); setDraft(null); setConversation([]); }}/></label><details><summary>Review the summary that will be shared</summary><dl>{facts.map(fact => <div key={fact.id}><dt>{fact.id}</dt><dd>{fact.value}</dd></div>)}</dl></details></>}
+        <label>Your request<textarea aria-label="Your request" required minLength={3} maxLength={2000} rows={3} value={description} readOnly={busy} placeholder="Describe a meal, ask a question, or refine the last reply…" onChange={event => setDescription(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}/></label>
+        <label className="assistant-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)}/> Send this request, recent chat{mode === 'review' ? ' and the displayed weekly summary' : ''} to {provider === 'openai' ? 'OpenAI' : 'Anthropic'}. It may contain health information. Only include details you want to share.</label>
+        {status.personal && <label className="assistant-consent"><input type="checkbox" checked={billingConsent} onChange={event => setBillingConsent(event.target.checked)}/> I understand this uses my selected provider key and may incur API charges, including for failed or stopped requests.</label>}
+        <div className="assistant-actions"><button className="shell-button" type="submit" disabled={!selectedReady || !consent || (status.personal && !billingConsent) || busy || !workspace.data || !workouts.data}>{busy ? 'Waiting for reply…' : 'Send message'}</button>{busy && <button className="shell-text-link" type="button" onClick={() => abortRef.current?.abort()}>Stop waiting</button>}<button className="shell-text-link" type="button" disabled={busy} onClick={() => void generate(true)}>Try example (no AI call)</button></div><p className="workout-muted">Shift + Enter for a new line. Review drafts before saving; AI can make mistakes. No photos, account details or saved private notes are uploaded automatically. Never paste API keys into chat.</p>
       </form>
-    </section>
+    </section></div>
+    <AIConnections/>
+
     {(error || workspace.error || workouts.error) && <p className="workout-notice" role="alert">{error || workspace.error || workouts.error}</p>}{message && <p className="workout-notice" role="status">{message}</p>}
     {draft && <section className="workout-panel assistant-review" aria-label="Review draft"><h2>{example ? 'Review example' : 'Review your draft'}</h2><p>{draft.message}</p>
       {draft.foods.length > 0 && <><p>Matches are suggestions. Confirm cooked/raw preparation and ingredients. Nutrition uses the selected food record; your saved edits take priority.</p><div className="assistant-form"><label>{mode === 'meals' ? 'Planned date' : 'Diary date'}<input type="date" value={date || today} onChange={event => setDate(event.target.value)}/></label><label>Meal<select value={meal} onChange={event => setMeal(event.target.value as typeof meal)}>{['Breakfast', 'Lunch', 'Dinner', 'Snack'].map(value => <option key={value}>{value}</option>)}</select></label>{mode === 'meals' && <label>Meal name<input maxLength={150} value={mealName} onChange={event => setMealName(event.target.value)}/></label>}</div>
