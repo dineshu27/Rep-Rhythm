@@ -26,7 +26,7 @@ export function FoodSearch({ savedIds, onChoose }: { savedIds: string[]; onChoos
     } finally { if (current === requestId.current) setBusy(false); }
   }
   function submit(event: FormEvent) { event.preventDefault(); if (!busy) void search(query); }
-  return <section className="workout-panel food-search" aria-label="Food search"><h2>Search all foods</h2><p className="workout-muted">Search {metadata.count.toLocaleString()} ingredients and prepared meals. Try banana, cooked rice, dosa, paneer, or chicken curry.</p>
+  return <section id="food-search" className="workout-panel food-search" aria-label="Food search"><h2>Search all foods</h2><p className="workout-muted">Search {metadata.count.toLocaleString()} ingredients and prepared meals. Try banana, cooked rice, dosa, paneer, or chicken curry.</p>
     <form onSubmit={submit} className="workout-form food-search-form"><label>Search foods<input type="search" minLength={2} maxLength={100} required value={query} onChange={event => setQuery(event.target.value)} placeholder="Food name, ingredient, or dish"/></label><button className="shell-button" type="submit" disabled={busy}>{busy ? 'Searching…' : 'Search foods'}</button></form>
     <p role="status" aria-label="Food search status">{busy ? 'Searching the food catalogue…' : results ? `${results.total.toLocaleString()} matches for “${results.query}”${results.total ? ` · Showing ${(results.page - 1) * results.pageSize + 1}–${Math.min(results.page * results.pageSize, results.total)}` : ''}` : notice}</p>
     {error && <p role="alert">{error}</p>}

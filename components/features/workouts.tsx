@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PageSignature } from './page-signature';
 import { exerciseCatalogue, presetExercise } from '@/lib/exercise-catalog';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, type FormEvent } from 'react';
@@ -31,9 +32,9 @@ export function WorkoutWorkspace({ active = false }: { active?: boolean }) {
       if (replaceWorkouts(backup)) setImportError('');
     } catch (err) { setImportError(err instanceof SyntaxError || (err instanceof Error && err.name === 'ZodError') ? 'Invalid workout backup. Your existing data is unchanged.' : err instanceof Error ? err.message : 'Unable to import this backup.'); }
   }
-  return <div className="workout-workspace">
+  return <div className="workout-workspace" data-page={active ? 'active' : 'workouts'}>
     <div className="shell-page-heading"><div><span className="shell-overline">BUILD YOUR RHYTHM</span><h1>{active ? 'Active workout' : 'Workout planner'}</h1><p>{active ? 'One set at a time. Your session saves as you go.' : 'Four gym days. An editable upper / lower routine.'}</p></div><span className="shell-badge">Saved in this browser</span></div>
-    <p className="workout-storage-note">Workouts stay on this device and browser. They are not synced or backed up to an account. Export a copy to keep them safe.</p>
+    <PageSignature kind={active ? 'active' : 'workouts'}/><p className="workout-storage-note">Workouts stay on this device and browser. They are not synced or backed up to an account. Export a copy to keep them safe.</p>
     {(error || importError) && <div className="workout-notice" role="alert">{importError || error}</div>}
     {!data ? <section className="workout-panel"><p>{error ? 'Your existing saved data has been preserved.' : 'Loading your workouts…'}</p>{error && <div className="workout-actions">{raw && <button className="shell-button shell-button-secondary" onClick={() => exportWorkouts(raw)}>Export recovery copy</button>}<button className="shell-button shell-button-secondary" onClick={() => { if (window.confirm('Reset all workout data in this browser? Export a recovery copy first.')) replaceWorkouts(initialWorkouts()); }}>Reset workout data</button></div>}</section> : <>
       {active ? <ActiveWorkout state={data}/> : <Planner state={data}/>}

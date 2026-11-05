@@ -1,0 +1,137 @@
+/* Purple edition: page identities share tokens, while their layouts stay distinct. */
+.brand-mark { display: block; border-radius: 10px; flex-shrink: 0; }
+.shell-brand > span { background: transparent; }
+.shell-mobile-brand > .brand-mark { width: 32px; height: 32px; }
+.shell-header { border-bottom-color: color-mix(in srgb, var(--border) 75%, transparent); }
+.shell-nav-link[aria-current=page] { position: relative; }
+.shell-nav-link[aria-current=page]::before { content: ''; position: absolute; left: -1px; width: 3px; height: 19px; border-radius: 3px; background: #d8b2ff; }
+.shell-button { background-image: linear-gradient(130deg, #ffffff09, #ffffff00); }
+.daily-brief { background: #32164d; }
+.daily-brief::before { background: radial-gradient(ellipse at 88% 12%, #a05fc954, transparent 60%), linear-gradient(120deg, #29153e, #492361); }
+.daily-brief::after { border-color: #e7baff20; box-shadow: 0 0 0 54px #e7baff09, 0 0 0 108px #e7baff06; }
+.feature-stat { border-top: 2px solid color-mix(in srgb, var(--stat-accent, var(--primary)) 40%, var(--border)); }
+.page-signature { --signature-accent: var(--primary); position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0,1.2fr) minmax(220px,.8fr); align-items: center; gap: 26px; padding: 30px 34px; min-height: 240px; border: 1px solid var(--border); border-radius: 24px; background: var(--soft); overflow: hidden; }
+.signature-copy { position: relative; z-index: 2; min-width: 0; }
+.signature-eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--primary); font-size: 9px; letter-spacing: 1.6px; font-weight: 650; }
+.page-signature h2 { font-size: clamp(25px,2.5vw,32px); line-height: 1.18; letter-spacing: -1px; font-weight: 600; max-width: 480px; margin: 13px 0; }
+.page-signature p { font-size: 12px; color: var(--muted-foreground); line-height: 1.9; max-width: 450px; }
+.signature-tags { display: flex; flex-wrap: wrap; gap: 7px 16px; list-style: none; padding: 0; margin: 18px 0 0; }
+.signature-tags li { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted-foreground); }
+.signature-tags svg { color: var(--signature-accent); }
+.signature-link { display: inline-flex; align-items: center; gap: 8px; padding-bottom: 3px; border-bottom: 1px solid currentColor; color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 18px; }
+.signature-art { position: relative; display: grid; place-items: center; min-width: 0; height: 190px; color: var(--primary); }
+.signature-food { background: linear-gradient(115deg, var(--card), var(--soft)); }
+.signature-food .signature-copy { max-width: 480px; }
+.signature-plate { position: relative; width: 190px; height: 190px; border-radius: 50%; padding: 12px; background: conic-gradient(from 25deg, #c4a1ed 0 29%, #dfbfd7 29% 52%, #b3d8cd 52% 74%, #e8d7b8 74% 100%); box-shadow: 0 8px 28px #653e6b0c; transform: rotate(-9deg); }
+.plate-inner { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; border-radius: 50%; border: 7px solid var(--card); width: 100%; height: 100%; background: var(--soft); }
+.plate-inner > span { font-size: 7px; font-weight: 700; letter-spacing: 1.2px; }
+.plate-inner > svg { color: var(--green); stroke-width: 1.3; }
+.plate-dot { position: absolute; width: 15px; height: 15px; border-radius: 50%; background: var(--primary); border: 4px solid var(--card); }
+.plate-dot-one { top: 20px; right: 0; }.plate-dot-two { bottom: 0; left: 25px; background: var(--green); }
+.signature-meals { background: var(--soft); border-radius: 24px 24px 8px 24px; }
+.signature-calendar { padding: 22px 20px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; transform: rotate(3deg); box-shadow: 0 14px 24px #653e6b0a; width: 290px; max-width: 100%; }
+.signature-calendar > span { display: block; font-size: 8px; font-weight: 650; letter-spacing: 1px; margin-bottom: 20px; color: var(--muted-foreground); }
+.signature-calendar > div { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 6px; }
+.signature-calendar i { display: grid; justify-items: center; gap: 12px; font-style: normal; font-size: 9px; color: var(--muted-foreground); }
+.signature-calendar b { width: 26px; height: 32px; display: grid; place-items: center; background: var(--soft); border-radius: 7px; color: var(--primary); }
+.signature-calendar b > span { width: 4px; height: 4px; border-radius: 50%; background: var(--muted-foreground); opacity: .4; }
+.signature-calendar .calendar-highlight b { background: var(--primary); color: var(--primary-foreground); }
+.signature-workouts, .signature-active { color: #fbf1ff; background: radial-gradient(ellipse at right top, #76439366, transparent 60%), #29143b; border-color: #624276; }
+.signature-workouts .signature-eyebrow, .signature-active .signature-eyebrow { color: #e5c4ff; }
+.signature-workouts p, .signature-active p, .signature-workouts .signature-tags li, .signature-active .signature-tags li { color: #ddc4eb; }
+.signature-workouts .signature-tags svg, .signature-active .signature-tags svg { color: #dec0ff; }
+.signature-strength { display: flex; align-items: center; gap: 32px; color: #e3c5ff; }
+.signature-strength > svg { transform: rotate(-35deg); flex-shrink: 0; }
+.signature-strength > div > span { display: block; font-size: 7px; letter-spacing: 1.2px; margin-bottom: 20px; }
+.strength-bars { display: flex; align-items: center; gap: 7px; height: 100px; }
+.strength-bars i { width: 9px; border-radius: 20px; background: linear-gradient(#e3c5ff, #8950ad); }
+.signature-active { min-height: 160px; padding: 24px 32px; }
+.signature-active .signature-art { height: 110px; }.signature-active .signature-tags { display: none; }
+.signature-progress { background: linear-gradient(110deg, var(--soft), var(--card)); }
+.signature-rings { width: 240px; height: 190px; position: relative; display: grid; place-items: center; }
+.signature-rings > i { position: absolute; border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border)); border-radius: 50%; width: 100px; height: 100px; }
+.signature-rings > i:nth-child(2) { width: 145px; height: 145px; border-style: dashed; }
+.signature-rings > i:nth-child(3) { width: 190px; height: 190px; opacity: .5; }
+.signature-rings > svg { color: var(--primary); stroke-width: 1.2; }
+.signature-rings > span { position: absolute; bottom: -5px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 7px 13px; font-size: 7px; letter-spacing: 1.2px; }
+.signature-profile, .signature-onboarding, .signature-auth { background: var(--card); }
+.signature-pass { display: grid; gap: 15px; width: 215px; padding: 20px; border-radius: 15px; border: 1px solid var(--border); background: linear-gradient(130deg, var(--soft), var(--card)); transform: rotate(-5deg); box-shadow: 8px 8px 0 var(--soft); }
+.signature-pass > div { display: flex; align-items: center; gap: 8px; }
+.signature-pass span { font-size: 7px; letter-spacing: 1.1px; font-weight: 600; }
+.signature-pass > i { width: 65%; height: 3px; background: var(--border); border-radius: 4px; }
+.signature-pass > svg:last-child { justify-self: end; margin-top: -23px; }
+.signature-onboarding { border-left: 4px solid var(--primary); }
+.signature-onboarding .signature-tags { gap: 8px; }
+.signature-onboarding .signature-tags li { padding: 6px 10px; border-radius: 7px; background: var(--soft); color: var(--foreground); }
+.signature-assistant { background: radial-gradient(ellipse at 95% 10%, color-mix(in srgb,var(--primary) 15%,transparent), transparent 70%),var(--card); }
+.signature-orbit { position: relative; display: grid; place-items: center; width: 230px; height: 180px; }
+.signature-orbit > i { position: absolute; width: 165px; height: 165px; border: 1px dashed color-mix(in srgb,var(--primary) 45%,var(--border)); border-radius: 50%; transform: rotate(-20deg); }
+.signature-orbit > svg { padding: 11px; width: 67px; height: 67px; background: var(--soft); border: 1px solid var(--border); border-radius: 21px; }
+.orbit-note { position: absolute; display: flex; align-items: center; gap: 5px; padding: 8px 12px; border: 1px solid var(--border); background: var(--card); border-radius: 9px; font-size: 10px; box-shadow: 0 3px 6px #00000004; }
+.orbit-note-one { top: 0; left: 5px; transform: rotate(-8deg); }.orbit-note-two { bottom: 7px; left: 0; transform: rotate(4deg); }.orbit-note-three { right: 0; top: 45px; transform: rotate(8deg); }
+
+/* Journal: date and nutrition summary form a compact ledger above the search desk. */
+[data-page=food] .diary-summary { background: var(--card); border-radius: 18px; border-left: 4px solid var(--primary); }
+[data-page=food] .diary-summary label { max-width: 260px; }
+[data-page=food] .diary-summary .feature-totals { margin: 0; padding-top: 14px; }
+[data-page=food] .food-search { position: relative; border-color: color-mix(in srgb,var(--primary) 35%,var(--border)); background: linear-gradient(135deg,var(--card),var(--soft)); scroll-margin-top: 25px; }
+[data-page=food] .food-search > h2 { font-size: 24px; }
+[data-page=food] .feature-meal-group { border-left: 2px solid var(--border); margin-top: 15px; padding: 4px 0 20px 21px; }
+[data-page=food] .feature-meal-group > h3 { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--primary); }
+[data-page=food] .feature-meal-group > h3::before { content: ''; margin-left: -27px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid var(--card); }
+/* Meal board: a vertical weekly agenda, with a date rail and roomy ingredient cards. */
+[data-page=meals] .feature-week { grid-template-columns: minmax(0,1fr); gap: 12px; }
+.meal-day-card { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: 24px; align-items: start; padding: 22px 26px; }
+.meal-day-label { min-width: 0; padding-top: 3px; }.meal-day-label > h2 { font-size: 16px; margin-top: 9px; letter-spacing: -.4px; }.meal-day-label > .shell-overline { font-size: 10px; color: var(--primary); }
+.meal-day-content { min-width: 0; border-left: 1px solid var(--border); padding-left: 25px; }
+.meal-day-content .feature-records { margin: 0; }.meal-day-content .feature-records > li:first-child { border-top: 0; padding-top: 0; }.meal-day-content > p { padding: 12px 0; }
+.meal-day-card[data-today=true] { border-color: color-mix(in srgb,var(--primary) 55%,var(--border)); background: linear-gradient(120deg,var(--soft),var(--card)); }
+.meal-week-toolbar > .shell-button { margin: 18px 0 9px; }
+/* Studio: strong exercise cards, restrained lower-body accent, and clear set targets. */
+[data-page=workouts] .workout-plan-card::before { width: 75px; height: 4px; background: var(--primary); }
+[data-page=workouts] .workout-plan-card[data-body=lower]::before { background: var(--purple); }
+[data-page=workouts] .workout-plan-card > h2 { font-size: 30px; }
+[data-page=workouts] .workout-exercise-preview li { padding: 13px 0; }
+[data-page=workouts] .workout-exercise-preview small { padding: 3px 7px; background: var(--soft); border-radius: 6px; color: var(--primary); height: fit-content; }
+[data-page=active] .workout-timer { background: linear-gradient(130deg,var(--soft),var(--card)); border-left: 4px solid var(--primary); }
+[data-page=active] .workout-session-grid .workout-panel { border-top: 3px solid color-mix(in srgb,var(--primary) 50%,var(--border)); }
+/* Progress: a calm report, with an uninterrupted chart canvas. */
+[data-page=progress] .progress-date { justify-items: start; background: transparent; box-shadow: none; border: 0; padding: 0; }
+[data-page=progress] .progress-date label { min-width: 220px; }
+[data-page=progress] .feature-stat { background: linear-gradient(160deg,var(--card),var(--soft)); }
+.progress-chart { padding: 30px; border-radius: 22px; }.progress-chart > h2 { font-size: 23px; }.progress-chart .feature-chart { height: 310px; }
+/* Preferences: grouped sections feel like a personal record, not a long plain form. */
+.profile-editor > .feature-form-grid { padding: 21px; border: 1px solid var(--border); border-radius: 15px; background: var(--input); }
+.profile-editor > h2 { color: var(--primary); font-size: 20px; margin: 8px 0; }
+[data-page=profile] .profile-editor, [data-page=onboarding] .profile-editor { padding: 30px; }
+/* Assistant: four distinct tools in a compact control bar, with a separate review desk. */
+[data-page=assistant] .assistant-tabs { width: 100%; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
+[data-page=assistant] .assistant-tabs a { text-align: center; display: flex; align-items: center; justify-content: center; min-height: 45px; }
+[data-page=assistant] .assistant-review { border-top: 3px solid var(--primary); background: linear-gradient(155deg,var(--card),var(--soft)); }
+[data-page=assistant] .assistant-form { max-width: 100%; }
+[data-page=auth].feature-auth { max-width: 1100px; }
+@media(min-width:1100px) {
+  [data-page=food] > .feature-grid { grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); align-items: start; }
+  [data-page=profile] .profile-editor > .feature-form-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  [data-page=auth].feature-auth { grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: start; }
+  [data-page=auth] > .shell-page-heading { grid-column: 1 / -1; }
+  [data-page=auth] > .page-signature { grid-row: 2 / 4; min-height: 500px; grid-template-columns: minmax(0,1fr); }
+  [data-page=auth] > .workout-panel, [data-page=auth] > .shell-text-link { grid-column: 2; }
+}
+@media(max-width:760px) {
+  .page-signature { grid-template-columns: minmax(0,1fr); padding: 25px; min-height: 0; }
+  .page-signature .signature-art { position: absolute; right: -22px; top: 15px; width: 180px; height: 190px; opacity: .12; pointer-events: none; }
+  .page-signature .signature-art span { display: none; }
+  .page-signature .signature-calendar i { font-size: 0; }
+  .page-signature h2 { max-width: 350px; font-size: 27px; }.page-signature p { max-width: 380px; }
+  .signature-tags { gap: 8px 13px; }
+  .signature-active { padding: 19px 24px; }.signature-active h2 { font-size: 24px; }.signature-active .signature-art { opacity: .1; }
+  .meal-day-card { grid-template-columns: minmax(0,1fr); gap: 13px; padding: 22px; }
+  .meal-day-label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }.meal-day-label > h2 { margin: 0; font-size: 14px; }
+  .meal-day-content { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 13px; }
+  [data-page=assistant] .assistant-tabs { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .profile-editor > .feature-form-grid { padding: 16px; }
+  [data-page=profile] .profile-editor, [data-page=onboarding] .profile-editor { padding: 22px; }
+  .progress-chart { padding: 22px; }
+}
+@media(max-width:359px) { .page-signature { padding: 22px; }.page-signature h2 { font-size: 24px; }.shell-mobile-brand > .brand-mark { width: 28px; height: 28px; } }

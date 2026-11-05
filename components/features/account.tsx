@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { PageSignature } from './page-signature';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useWorkspace, downloadJSON } from '@/lib/workspace-store';
 import { useWorkouts } from '@/lib/workout-store';
@@ -17,7 +18,7 @@ export function Account() {
   }
   async function run(task: () => Promise<void>) { setBusy(true); setNotice(''); try { await task(); } catch (error) { setNotice(error instanceof Error ? error.message : 'Request failed.'); } finally { setBusy(false); } }
   function signIn(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const email = new FormData(event.currentTarget).get('email'); void run(async () => { await request('/api/auth', { method: 'POST', body: JSON.stringify({ email }) }); setNotice('Check your email for a sign-in link. Open it in this browser to finish signing in.'); }); }
-  return <div className="feature-page feature-auth"><div className="shell-page-heading"><span className="shell-overline">YOUR PERSONAL WORKSPACE</span><h1>A home for your healthy habits.</h1><p>Connect your account when cloud storage is configured.</p></div><section className="workout-panel"><h2>{auth?.email ? `Signed in as ${auth.email}` : auth?.configured ? 'Sign in with email' : 'Browser tracking is ready'}</h2>
+  return <div className="feature-page feature-auth" data-page="auth"><div className="shell-page-heading"><span className="shell-overline">YOUR PERSONAL WORKSPACE</span><h1>A home for your healthy habits.</h1><p>Connect your account when cloud storage is configured.</p></div><PageSignature kind="auth"/><section className="workout-panel"><h2>{auth?.email ? `Signed in as ${auth.email}` : auth?.configured ? 'Sign in with email' : 'Browser tracking is ready'}</h2>
     {!auth && <p className="workout-muted">Checking account configuration…</p>}
     {auth && !auth.configured && <><p className="workout-muted">Cloud sign-in is awaiting the intended Supabase project and its public configuration. Your profile, food, meals, workouts, and progress work in this browser now.</p><Link className="shell-button" href="/onboarding">Set up browser tracking</Link></>}
     {auth?.configured && !auth.email && <form onSubmit={signIn} className="workout-form"><label>Email address<input type="email" name="email" autoComplete="email" maxLength={254} required/></label><button className="shell-button" type="submit" disabled={busy}>Email a sign-in link</button></form>}

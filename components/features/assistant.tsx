@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { PageSignature } from './page-signature';
 import { useEffect, useRef, useState } from 'react';
 import { assistantModes, matchedDraftSchema, applyFoodDraft, suggestedPlan, weeklyFacts, type AssistantMode, type MatchedDraft } from '@/lib/assistant';
 import { useWorkspace, changeWorkspace } from '@/lib/workspace-store';
@@ -47,8 +48,8 @@ export function Assistant({ mode }: { mode: AssistantMode }) {
     if (!confirm(`Replace the exercises in ${plan.name} with this reviewed suggestion? Your workout history is preserved.`)) return;
     try { if (dispatchWorkout({ type: 'save-plan', plan: suggestedPlan(plan, draft, () => crypto.randomUUID()) })) { setDraft(null); setMessage('Reviewed exercises saved to your plan.'); } } catch { setError('Check the exercise values before saving.'); }
   }
-  return <div className="feature-page"><div className="shell-page-heading"><div><span className="shell-overline">DRAFT · REVIEW · SAVE</span><h1>Your AI assistant</h1><p>Turn everyday descriptions into records and practical next steps.</p></div></div>
-    <nav className="assistant-tabs" aria-label="Assistant tools">{assistantModes.map(item => <Link className={item === mode ? 'shell-button' : 'shell-text-link'} aria-current={item === mode ? 'page' : undefined} href={`/assistant?mode=${item}`} key={item}>{titles[item]}</Link>)}</nav>
+  return <div className="feature-page" data-page="assistant"><div className="shell-page-heading"><div><span className="shell-overline">DRAFT · REVIEW · SAVE</span><h1>Your AI assistant</h1><p>Turn everyday descriptions into records and practical next steps.</p></div></div>
+    <PageSignature kind="assistant"/><nav className="assistant-tabs" aria-label="Assistant tools">{assistantModes.map(item => <Link className={item === mode ? 'shell-button' : 'shell-text-link'} aria-current={item === mode ? 'page' : undefined} href={`/assistant?mode=${item}`} key={item}>{titles[item]}</Link>)}</nav>
     <section className="workout-panel"><h2>{titles[mode]}</h2><p role="status">{status.reason}</p>{status.quota && <p>{status.quota.dailyRemaining} attempts left today · {status.quota.monthlyRemaining} left this month across the app</p>}<p>{prompts[mode]}</p>
       <form className="assistant-form" onSubmit={event => { event.preventDefault(); void generate(false); }}>
         <label>Your request<textarea required minLength={3} maxLength={2000} rows={4} value={description} onChange={event => setDescription(event.target.value)}/></label>
