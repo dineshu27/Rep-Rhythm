@@ -4,17 +4,17 @@ import Link from 'next/link';
 import { AIConnections } from './ai-connections';
 import { AppearancePreferences } from './appearance';
 import { PageSignature } from './page-signature';
-import { QuickToday } from './quick-today';
+import { HomeDashboard } from './home-dashboard';
 import { QuickFoodDiary } from './quick-food';
 import { NutritionValues as NutritionText } from './nutrition-values';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { Activity, ArrowRight, Beef, Download, Flame, Leaf, Plus, Sparkles, Trash2, Wheat, Droplets } from 'lucide-react';
+import { Download, Plus, Trash2 } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { changeWorkspace, downloadJSON, replaceWorkspace, useWorkspace } from '@/lib/workspace-store';
 import { useWorkouts, replaceWorkouts } from '@/lib/workout-store';
 import { initialWorkouts, WORKOUT_STORAGE_KEY, workoutStateSchema } from '@/lib/workouts';
-import { WORKSPACE_KEY, dateSchema, addNutrition, dayNutrition, foodSchema, initialWorkspace, logPlannedMeal, mealCategory, mealNutrition, mealPlanSchema, metricSchema, mondayOf, nutritionFor, profileSchema, sevenDayWeight, shiftDate, todayInZone, upsertById, weightSchema, workspaceSchema, zeroNutrition, type FoodRecord, type PlannedMeal, type Profile, type Workspace } from '@/lib/workspace';
+import { WORKSPACE_KEY, dateSchema, addNutrition, foodSchema, initialWorkspace, logPlannedMeal, mealCategory, mealNutrition, mealPlanSchema, metricSchema, mondayOf, nutritionFor, profileSchema, sevenDayWeight, shiftDate, todayInZone, upsertById, weightSchema, workspaceSchema, zeroNutrition, type FoodRecord, type PlannedMeal, type Profile, type Workspace } from '@/lib/workspace';
 
 function id() { return crypto.randomUUID(); }
 function round(value: number) { return Math.round(value * 10) / 10; }
@@ -26,34 +26,13 @@ function Heading({ title, description }: { title: string; description: string })
 export function WorkspacePage({ view }: { view: 'dashboard' | 'profile' | 'onboarding' | 'food' | 'meals' | 'progress' }) {
   const { data, error } = useWorkspace();
   const headings = { dashboard: ['Your space to make progress.', 'Real records. One day at a time.'], profile: ['Your profile & settings', 'Your preferences, goals, and data controls.'], onboarding: ['Your starting point', 'Make the workspace yours. You can change these preferences later.'], food: ['Food diary', 'Log your portions and keep a clear nutrition history.'], meals: ['Meal planner', 'Plan seven days around foods you actually use.'], progress: ['Progress', 'Your measurements, daily habits, and weekly trends.'] };
-  return <div className="feature-page" data-page={view}><Heading title={headings[view][0]} description={headings[view][1]}/>{view === 'onboarding' && <PageSignature kind={view}/>}{['meals', 'progress'].includes(view) && <Link className="shell-text-link" href={`/assistant?mode=${view === 'meals' ? 'meals' : view === 'progress' ? 'review' : 'food'}`}>Open AI assistant →</Link>}{error && <div className="workout-notice" role="alert">{error}</div>}{!data ? <section className="workout-panel"><p>{error ? 'Open Settings for data recovery.' : 'Loading your workspace…'}</p>{view === 'profile' && <DataControls data={null}/>}</section> : <>
-    {view === 'dashboard' && <Dashboard data={data}/>}
+  return <div className="feature-page" data-page={view}>{(view!=='dashboard'||!data)&&<Heading title={headings[view][0]} description={headings[view][1]}/>}{view === 'onboarding' && <PageSignature kind={view}/>}{['meals', 'progress'].includes(view) && <Link className="shell-text-link" href={`/assistant?view=coach&mode=${view === 'meals' ? 'meals' : view === 'progress' ? 'review' : 'food'}`}>Open AI assistant →</Link>}{error && <div className="workout-notice" role="alert">{error}</div>}{!data ? <section className="workout-panel"><p>{error ? 'Open Settings for data recovery.' : 'Loading your workspace…'}</p>{view === 'profile' && <DataControls data={null}/>}</section> : <>
+    {view === 'dashboard' && <HomeDashboard data={data}/>}
     {view === 'onboarding' && <ProfileEditor key={JSON.stringify(data.profile)} profile={data.profile} onboarding/>}{view === 'profile' && <><AppearancePreferences/><details className="workout-panel settings-section"><summary>Profile & nutrition targets</summary><ProfileEditor key={JSON.stringify(data.profile)} profile={data.profile} onboarding={false}/></details><AIConnections/><details className="workout-panel settings-section"><summary>Backup, restore & data controls</summary><DataControls data={data}/></details></>}
     {view === 'food' && <FoodDiary data={data}/>}
     {view === 'meals' && <MealPlanner data={data}/>}
     {view === 'progress' && <Progress data={data}/>}
   </>}</div>;
-}
-
-function Dashboard({ data }: { data: Workspace }) {
-  const { data: workouts } = useWorkouts();
-  const today = todayInZone(data.profile.timeZone);
-  const totals = dayNutrition(data, today);
-  const logged = data.logs.some(log => log.date === today);
-  const metric = data.metrics.find(metric => metric.date === today);
-  const week = mondayOf(today);
-  const sessions = workouts?.history.filter(session => { const date = todayInZone(data.profile.timeZone, new Date(session.finishedAt!)); return date >= week && date <= today; }) ?? [];
-  const latest = [...data.weights].filter(row => row.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0];
-  const nutrientIcons = { calories: Flame, protein: Beef, fat: Droplets, carbs: Wheat };
-  return <>
-    <QuickToday data={data}/>
-    {!data.profile.onboarded && <section className="workout-resume"><div><h2>Start with your preferences.</h2><p>Review your profile, timezone, and nutrition targets before tracking.</p></div><Link className="shell-button" href="/onboarding">Set up your profile <ArrowRight size={16}/></Link></section>}
-    {workouts?.active && <section className="workout-resume"><div><span className="shell-overline">SESSION IN PROGRESS</span><h2>{workouts.active.name}</h2><p>{workouts.active.sets.length} sets logged</p></div><Link className="shell-button" href="/workouts/active">Resume workout <ArrowRight size={16}/></Link></section>}
-    <div className="feature-section-heading"><h2>Today’s nutrition</h2><span>{today} · {data.profile.timeZone}</span></div>
-    <div className="shell-target-grid nutrition-grid">{(['calories', 'protein', 'fat', 'carbs'] as const).map(key => { const Icon = nutrientIcons[key]; return <section key={key} data-nutrient={key} className="workout-panel feature-stat"><div className="stat-heading"><span>{key === 'calories' ? 'Calories' : key[0].toUpperCase() + key.slice(1)}</span><Icon size={16} aria-hidden="true"/></div><strong>{logged ? round(totals[key]).toLocaleString() : '—'} <small>{key === 'calories' ? 'kcal' : 'g'}</small></strong><p>{logged ? `of ${data.profile[key]} ${key === 'calories' ? 'kcal' : 'g'} target` : `Not logged · target ${data.profile[key]}`}</p><progress aria-label={`${key} target progress`} value={Math.min(totals[key], data.profile[key])} max={data.profile[key] || 1}/></section>; })}<section data-nutrient="fiber" className="workout-panel feature-stat"><div className="stat-heading"><span>Fiber</span><Leaf size={16} aria-hidden="true"/></div><strong>{!logged ? "—" : totals.fiber === null ? "Not recorded" : round(totals.fiber)} {logged && totals.fiber !== null && <small>g</small>}</strong><p>{logged && totals.fiber === null ? "One or more foods have no fiber value" : "From logged food portions"}</p></section></div>
-    <p className="workout-muted">{logged ? `${round(Math.abs(data.profile.calories - totals.calories))} kcal ${totals.calories > data.profile.calories ? 'over' : 'remaining against'} your target.` : 'Your diary is empty for today.'} Workout energy does not change food targets.</p>
-    <div className="feature-grid"><section className="workout-panel"><div className="card-eyebrow"><Activity size={13} aria-hidden="true"/> THE EVERYDAY ESSENTIALS</div><h2>Your daily rhythm</h2><dl className="feature-summary"><div><dt>Steps</dt><dd>{metric ? metric.steps.toLocaleString() : 'Not logged'}{data.profile.stepGoal ? ` / ${data.profile.stepGoal.toLocaleString()}` : ''}</dd></div><div><dt>Water</dt><dd>{metric ? `${metric.waterMl} ml` : 'Not logged'}{data.profile.waterGoalMl ? ` / ${data.profile.waterGoalMl} ml` : ''}</dd></div><div><dt>Latest weight</dt><dd>{latest ? `${latest.kg} kg · ${latest.date}` : 'Not logged'}</dd></div><div><dt>Gym days this week</dt><dd>{new Set(sessions.map(session => todayInZone(data.profile.timeZone, new Date(session.finishedAt!)))).size} / {data.profile.gymDays} days</dd></div></dl><Link className="shell-text-link" href="/progress">Log daily activity and measurements →</Link></section><section className="workout-panel"><div className="card-eyebrow"><Sparkles size={13} aria-hidden="true"/> MAKE IT A HABIT</div><h2>Make room for the next step.</h2><div className="feature-link-list"><Link href="/food">Log a meal <ArrowRight size={16}/></Link><Link href="/meals">Plan your week <ArrowRight size={16}/></Link><Link href="/workouts">Start a workout <ArrowRight size={16}/></Link><Link href="/assistant">Explore your AI assistant <Sparkles size={16}/></Link><Link href="/settings">Edit your targets <ArrowRight size={16}/></Link></div></section></div>
-  </>;
 }
 
 function Field({ label, name, value, type = 'number', min, max, step = 'any', required = true }: { label: string; name: string; value?: string | number; type?: string; min?: number; max?: number; step?: string; required?: boolean }) { return <label>{label}<input name={name} type={type} defaultValue={value} min={min} max={max} step={step} required={required}/></label>; }

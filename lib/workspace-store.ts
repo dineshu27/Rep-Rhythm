@@ -42,3 +42,5 @@ export function downloadJSON(data: unknown, name = 'fittrack-backup') {
   const url = URL.createObjectURL(new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const a = document.createElement('a'); a.href = url; a.download = `${name}-${new Date().toISOString().slice(0, 10)}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+export function refreshWorkspace() { current=read();loaded=true;emit(); }

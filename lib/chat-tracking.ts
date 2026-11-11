@@ -1,0 +1,42 @@
+import { z } from 'zod';
+import { dateSchema, mealCategory, foodSchema, foodLogSchema, metricSchema, todayInZone, workspaceSchema, type Workspace } from './workspace';
+import { exerciseCatalogue, presetExercise } from './exercise-catalog';
+import { workoutStateSchema, sessionSchema, type WorkoutState, type Session } from './workouts';
+export const chatRequestSchema=z.object({text:z.string().trim().min(2).max(2000),date:dateSchema,today:dateSchema,meal:mealCategory,provider:z.enum(['basic','openai','anthropic']).default('basic'),consent:z.boolean().default(false),billingConsent:z.boolean().default(false),pendingText:z.string().max(2000).optional(),summary:z.object({foods:z.array(z.string().max(180)).max(20),workouts:z.array(z.string().max(180)).max(20),steps:z.number().int().min(0).max(100000).nullable(),calories:z.number().finite().min(0).max(100000),protein:z.number().finite().min(0).max(10000)}).optional(),history:z.array(z.object({role:z.enum(['user','assistant']),content:z.string().max(2000)})).max(8).default([])});
+export type ChatRequest=z.infer<typeof chatRequestSchema>;
+const quantity=z.number().finite().positive().max(10000).nullable();
+export const extractedChatSchema=z.object({message:z.string().max(1500),intent:z.enum(['log','question']),foods:z.array(z.object({query:z.string().min(2).max(100),grams:quantity})).max(12),exercises:z.array(z.object({query:z.string().min(2).max(100),sets:z.number().int().min(1).max(10).nullable(),amount:z.number().int().min(1).max(36000).nullable(),kind:z.enum(['reps','seconds']),weightKg:z.number().finite().min(0).max(1000).nullable()})).max(12),steps:z.number().int().min(0).max(100000).nullable()});
+export type ExtractedChat=z.infer<typeof extractedChatSchema>;
+export const chatDraftSchema=extractedChatSchema.extend({date:dateSchema,meal:mealCategory,sourceText:z.string().max(4000),autoEligible:z.boolean(),issues:z.array(z.string().max(300)).max(30),foods:z.array(z.object({query:z.string(),grams:quantity,food:foodSchema.nullable(),matches:z.array(foodSchema).max(5),confident:z.boolean()})).max(12),exercises:z.array(z.object({query:z.string(),sets:z.number().int().min(1).max(10).nullable(),amount:z.number().int().min(1).max(36000).nullable(),kind:z.enum(['reps','seconds']),weightKg:z.number().finite().min(0).max(1000).nullable(),presetId:z.string().nullable(),choices:z.array(z.string()).max(8)})).max(12)});
+export type ChatDraft=z.infer<typeof chatDraftSchema>;
+export function normalizeLogName(value:string){return value.toLowerCase().replace(/[-–]/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();}
+export function exerciseMatches(query:string){
+ const name=normalizeLogName(query);const exact=exerciseCatalogue.find(row=>normalizeLogName(row.name)===name);if(exact)return [exact];
+ const aliases:Record<string,string[]>= {'bench press':['barbell-bench-press','dumbbell-bench-press'],'bench':['barbell-bench-press','dumbbell-bench-press'],'squat':['back-squat','goblet-squat'],'squats':['back-squat','goblet-squat'],'bicep curl':['dumbbell-curl','cable-curl'],'biceps curl':['dumbbell-curl','cable-curl'],'push ups':['push-up'],'pushups':['push-up'],'pull ups':['assisted-pull-up'],'lat pull down':['lat-pulldown'],'shoulder press':['dumbbell-shoulder-press','overhead-press']};
+ if(aliases[name])return aliases[name].flatMap(id=>{const row=exerciseCatalogue.find(row=>row.id===id);return row?[row]:[];});
+ const terms=name.split(' ').filter(word=>!['the','a','of','at','with'].includes(word));return exerciseCatalogue.filter(row=>terms.length>0&&terms.every(term=>normalizeLogName(row.name).split(' ').some(word=>word===term||word===term.replace(/s$/,'')))).slice(0,8);
+}
+export const receiptSchema=z.object({foodLogs:z.array(foodLogSchema).max(12),sessions:z.array(sessionSchema).max(1),date:dateSchema,previousMetric:metricSchema.nullable(),metric:metricSchema.nullable()});
+export type TrackingReceipt=z.infer<typeof receiptSchema>;
+function sameRecord(a:unknown,b:unknown):boolean {const stable=(value:unknown):unknown=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,stable(item)])):value;return JSON.stringify(stable(a))===JSON.stringify(stable(b));}
+export function timestampForDay(date:string,timeZone:string,now:string){if(date===todayInZone(timeZone,new Date(now)))return now;const target=Date.parse(`${date}T12:00:00Z`);let result=target;for(let i=0;i<2;i++){const parts=new Intl.DateTimeFormat('en-GB',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(result));const get=(type:string)=>Number(parts.find(row=>row.type===type)?.value);const displayed=Date.UTC(get('year'),get('month')-1,get('day'),get('hour'),get('minute'),get('second'));result+=target-displayed;}return new Date(result).toISOString();}
+
+export function applyChatDraft(workspace:Workspace,workouts:WorkoutState,draft:ChatDraft,makeId:()=>string,now:string){
+ draft=chatDraftSchema.parse(draft);
+ if(draft.intent!=='log')throw Error('This is a question, not a completed activity report.');
+ const foods=[...workspace.foods];const logs=draft.foods.map(row=>{if(!row.food||row.grams===null)throw Error('Choose a food and its weighed grams.');const food=foods.find(food=>food.id===row.food!.id)??foodSchema.parse(row.food);if(!foods.some(saved=>saved.id===food.id))foods.push(food);return {id:makeId(),date:draft.date,meal:draft.meal,food:structuredClone(food),grams:row.grams};});
+ const exercises=draft.exercises.map(row=>{if(row.sets===null||row.amount===null||row.weightKg===null)throw Error('Complete the sets, reps/time and weight before logging.');const id=makeId();if(row.presetId){const preset=presetExercise(row.presetId,id,row.sets);if(preset.kind!==row.kind)throw Error('Check the exercise tracking unit.');return {...preset,target:String(row.amount)};}return {id,name:row.query,kind:row.kind,sets:row.sets,target:String(row.amount),restSeconds:0};});
+ const sessions:Session[]=[];
+ if(exercises.length){const sessionId=makeId();const at=timestampForDay(draft.date,workspace.profile.timeZone,now);sessions.push({id:sessionId,planId:`chat-${sessionId}`,name:exercises.length===1?exercises[0].name:'Workout logged in chat',startedAt:at,finishedAt:at,notes:'Reported in chat. Duration was not tracked.',exercises,sets:exercises.flatMap((exercise,index)=>Array.from({length:exercise.sets},()=>({id:makeId(),exerciseId:exercise.id,kind:exercise.kind,amount:draft.exercises[index].amount!,weightKg:draft.exercises[index].weightKg!})))});}
+ const previousMetric=workspace.metrics.find(row=>row.date===draft.date)??null;const metric=draft.steps===null?null:{...(previousMetric??{date:draft.date,waterMl:0,cardioMinutes:0,notes:''}),steps:draft.steps};
+ if(!logs.length&&!sessions.length&&!metric)throw Error('No completed entries to log.');
+ const nextWorkspace=workspaceSchema.parse({...workspace,foods,logs:[...workspace.logs,...logs],metrics:metric?[...workspace.metrics.filter(row=>row.date!==draft.date),metric]:workspace.metrics});
+ const nextWorkouts=workoutStateSchema.parse({...workouts,history:[...sessions,...workouts.history]});
+ return {workspace:nextWorkspace,workouts:nextWorkouts,receipt:{foodLogs:logs,sessions,date:draft.date,previousMetric,metric} satisfies TrackingReceipt};
+}
+export function undoChatReceipt(workspace:Workspace,workouts:WorkoutState,receipt:TrackingReceipt){
+ for(const log of receipt.foodLogs)if(!sameRecord(workspace.logs.find(row=>row.id===log.id),log))throw Error('This entry changed in the tracker. Edit it there instead of undoing from chat.');
+ for(const session of receipt.sessions)if(!sameRecord(workouts.history.find(row=>row.id===session.id),session))throw Error('This workout changed in the tracker. Edit it there instead.');
+ if(receipt.metric&&!sameRecord(workspace.metrics.find(row=>row.date===receipt.date),receipt.metric))throw Error('Activity changed since this chat entry. Edit it in Progress.');
+ return {workspace:workspaceSchema.parse({...workspace,logs:workspace.logs.filter(row=>!receipt.foodLogs.some(log=>log.id===row.id)),metrics:receipt.metric?[...workspace.metrics.filter(row=>row.date!==receipt.date),...(receipt.previousMetric?[receipt.previousMetric]:[])]:workspace.metrics}),workouts:workoutStateSchema.parse({...workouts,history:workouts.history.filter(row=>!receipt.sessions.some(session=>session.id===row.id))})};
+}

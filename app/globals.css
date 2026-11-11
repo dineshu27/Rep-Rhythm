@@ -5,4 +5,5 @@
 @import "./violet.css";
 @import "./options.css";
 @import "./simple.css";
+@import "./companion.css";
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

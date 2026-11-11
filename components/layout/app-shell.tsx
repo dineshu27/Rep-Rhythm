@@ -2,10 +2,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ArrowUpRight, CalendarDays, ChevronRight, Dumbbell, Home, LogIn, Play, Settings2, Sparkles, TrendingUp, Utensils } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, ChevronRight, Dumbbell, Home, Watch, LogIn, Play, Settings2, Sparkles, TrendingUp, Utensils } from 'lucide-react';
 import { isActiveRoute, mobileNavigation, navigation, pageLabel } from '@/lib/config/navigation';
 import { ThemeToggle } from './theme-toggle';
-const icons = { assistant: Sparkles, home: Home, food: Utensils, meals: CalendarDays, workouts: Dumbbell, active: Play, progress: TrendingUp, settings: Settings2 };
+const icons = { watch: Watch, assistant: Sparkles, home: Home, food: Utensils, meals: CalendarDays, workouts: Dumbbell, active: Play, progress: TrendingUp, settings: Settings2 };
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   function navLink(item: typeof navigation[number], mobile = false) { const Icon = icons[item.icon]; return <Link key={item.href} href={item.href} className={mobile ? 'shell-mobile-link' : 'shell-nav-link'} aria-current={isActiveRoute(pathname, item.href) ? 'page' : undefined}><Icon size={19} aria-hidden="true"/><span>{mobile && item.href === '/workouts' ? 'Workouts' : item.label}</span>{!mobile && <ChevronRight size={14} className="nav-arrow"/>}</Link>; }

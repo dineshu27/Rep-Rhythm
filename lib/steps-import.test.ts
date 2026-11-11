@@ -1,0 +1,5 @@
+import {expect,it} from 'vitest';
+import {parseStepCsv,importSteps} from './steps-import';
+import {initialWorkspace} from './workspace';
+it('validates daily CSV and refuses duplicate dates or invalid values',()=>{expect(parseStepCsv('\uFEFFdate,steps\r\n2026-11-10,6500')).toEqual([{date:'2026-11-10',steps:6500}]);for(const value of ['date,steps\n2026-02-30,1','date,steps\n2026-11-10,-1','date,steps\n2026-11-10,100001','date,steps\n2026-11-10,1\n2026-11-10,2'])expect(()=>parseStepCsv(value)).toThrow();});
+it('skips existing days by default, preserves water/notes when replacing, rejects future activity',()=>{const state=initialWorkspace();state.metrics=[{date:'2026-11-10',steps:100,waterMl:1700,cardioMinutes:20,notes:'Keep'}];const rows=parseStepCsv('date,steps\n2026-11-10,6500\n2026-11-11,7200');expect(importSteps(state,rows,false,'2026-11-11')).toMatchObject({imported:1,skipped:1});const result=importSteps(state,rows,true,'2026-11-11');expect(result.workspace.metrics[0]).toEqual({...state.metrics[0],steps:6500});expect(()=>importSteps(state,rows,true,'2026-11-10')).toThrow('Future');expect(state.metrics[0].steps).toBe(100);});

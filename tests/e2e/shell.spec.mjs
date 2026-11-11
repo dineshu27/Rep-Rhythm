@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 test('dashboard, navigation, and responsive layout', async ({page,isMobile}) => {
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:'Your space to make progress.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Hi, there/})).toBeVisible();
   const nav = page.getByRole('navigation',{name:isMobile?'Mobile navigation':'Main navigation',exact:true});
   await nav.getByRole('link',{name:'Food diary',exact:true}).click();
   await expect(page).toHaveURL(/\/food$/);
@@ -21,7 +21,7 @@ test('theme choice survives a reload', async ({page}) => {
   await expect(page.locator('html')).toHaveAttribute('data-theme',next);
 });
 test('all feature routes and the not-found screen render', async ({page}) => {
-  for (const route of ['/meals','/workouts','/workouts/active','/progress','/settings','/onboarding','/auth']) {
+  for (const route of ['/meals','/workouts','/workouts/active','/progress','/settings','/onboarding','/auth','/connections','/assistant']) {
     await page.goto(route);
     await expect(page.locator('main h1')).toBeVisible();
   }

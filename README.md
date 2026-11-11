@@ -6,10 +6,12 @@ A Next.js fitness workspace for profile preferences, food and meal planning, wor
 
 - **Food:** search or choose Recent → enter grams → Add. Repeat yesterday’s meal, edit entries inline, or undo a removal. Package labels and saved-food management are secondary.
 - **Workouts:** select exercises and start without creating a routine, or record completed sets in one form. Previous set values are shown for review; routines and weekly splits are still available.
-- **Assistant:** Basic helper works without keys using text parsing and catalogue search. Connect a personal key for model-powered replies; provider sharing and billing consent still apply.
+- **Chat:** describe food in grams, completed sets and daily steps in one conversation. Clear reports save automatically with editable receipts and Undo; missing details require clarification or review. Basic logging needs no key; connected personal models require sharing and billing consent. Planning tools remain under Planning & coaching.
+- **Home:** personalised greeting, recorded nutrition and seven-day visuals, optional city/current-area weather, and quick daily actions.
+- **Watch & steps:** daily CSV step import with conflict preview. Live Apple/Google watch sync is not configured; connection requirements are explained in the app.
 - **Appearance:** the selected colour also updates the app logo, favicon and install manifest. Installed mobile icon refresh timing depends on the browser/OS.
 
-See [workflow details and limits](docs/simple-logging.md).
+See [workflow details and limits](docs/simple-logging.md) and [chat, weather and watch setup](docs/daily-companion.md).
 
 ## Run locally
 
@@ -26,9 +28,11 @@ For a production build, run `npm run build`, then `npm start`. The Vercel projec
 
 | Route | Behavior |
 | --- | --- |
-| `/` | Actual daily nutrition, activity, weight, workout summary, and session resume |
+| `/` | Personal greeting, optional weather, actual nutrition and seven-day visuals, quick logging and session resume |
 | `/onboarding` | Editable profile, timezone, independent nutrition targets and optional activity goals |
-| `/assistant` | Conversational food/training assistant, reviewable drafts, personal OpenAI/Anthropic connections |
+| `/assistant` | Unified food, completed-workout and daily-step chat; automatic clear logs, review, edit and undo receipts |
+| `/assistant?view=coach` | Meal ideas, workout plans and weekly coaching; personal OpenAI/Anthropic connections |
+| `/connections` | Daily step CSV preview/import and honest Apple/Google connection setup status |
 | `/settings` | Appearance and custom colours, personal AI keys, profile, backups and data controls |
 | `/food` | Searchable user food library, per-100-g source values, gram portions, live calorie/protein/fat/carb/fiber calculations, diary edit/delete, immutable food snapshots |
 | `/meals` | Seven-day navigation, editable meal ingredients, calculated nutrition and explicit ingredient logging |

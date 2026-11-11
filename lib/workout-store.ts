@@ -74,3 +74,6 @@ export function exportWorkouts(raw?: string | null) {
   anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export function useWorkouts() { return useSyncExternalStore(subscribe, getSnapshot, () => serverSnapshot); }
+
+export function workoutSnapshot() { return getSnapshot(); }
+export function refreshWorkouts() { snapshot=read();loaded=true;emit(); }
