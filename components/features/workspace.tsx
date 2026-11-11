@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { AppleHealthDay } from './apple-health';
+import {useHealthData} from '@/lib/health-store';
+import {effectiveStepSummary,healthWorkoutsForDay} from '@/lib/health';
 import { AIConnections } from './ai-connections';
 import { AppearancePreferences } from './appearance';
 import { PageSignature } from './page-signature';
@@ -103,12 +106,12 @@ function MealEditor({ data, defaultDate, meal, onDone }: { data: Workspace; defa
 }
 
 function Progress({ data }: { data: Workspace }) {
-  const { data: workouts } = useWorkouts();
+  const { data: workouts } = useWorkouts();const {data:health}=useHealthData();
   const [date, setDate] = useState(() => todayInZone(data.profile.timeZone));
   const [error, setError] = useState('');
   const weights = [...data.weights].sort((a, b) => a.date.localeCompare(b.date));
   const average = sevenDayWeight(weights, date);
-  const weekly = data.metrics.filter(row => row.date >= shiftDate(date, -6) && row.date <= date);
+  const dates=Array.from({length:7},(_,i)=>shiftDate(date,i-6));const steps=effectiveStepSummary(health,data.metrics,dates,data.profile.timeZone);const healthSessions=dates.reduce((sum,day)=>sum+healthWorkoutsForDay(health,day,data.profile.timeZone).length,0);
   const weeklyFood = data.logs.filter(row => row.date >= shiftDate(date, -6) && row.date <= date);
   const loggedDays = new Set(weeklyFood.map(row => row.date));
   const calorieAverage = loggedDays.size ? weeklyFood.reduce((sum, log) => sum + nutritionFor(log.food, log.grams).calories, 0) / loggedDays.size : null;
@@ -118,7 +121,7 @@ function Progress({ data }: { data: Workspace }) {
     if (!parsed.success) { setError('Enter a weight of 20–500 kg and an optional waist of 20–300 cm.'); return; }
     if (changeWorkspace(state => ({ ...state, weights: [...state.weights.filter(row => row.date !== date), parsed.data] }))) setError('Measurement saved.');
   }
-  return <><section className="workout-panel workout-form progress-date"><label>Summary end date<input type="date" value={date} required onChange={event => { if (dateSchema.safeParse(event.target.value).success) setDate(event.target.value); }}/></label></section><div className="shell-target-grid"><Stat label="7-day weight average" value={average === null ? 'Not logged' : `${round(average)} kg`} detail={`${weights.filter(row => row.date >= shiftDate(date, -6) && row.date <= date).length} measured days`}/><Stat label="Average food calories" value={calorieAverage === null ? 'Not logged' : `${round(calorieAverage)} kcal`} detail={`${loggedDays.size} logged days; empty days excluded`}/><Stat label="Steps in seven days" value={weekly.length ? weekly.reduce((sum, row) => sum + row.steps, 0).toLocaleString() : 'Not logged'} detail={`${weekly.length} recorded days`}/><Stat label="Completed workouts" value={String(sessions.length)} detail="In the selected seven days"/></div>
+  return <><section className="workout-panel workout-form progress-date"><label>Summary end date<input type="date" value={date} required onChange={event => { if (dateSchema.safeParse(event.target.value).success) setDate(event.target.value); }}/></label></section><AppleHealthDay date={date} timeZone={data.profile.timeZone}/><div className="shell-target-grid"><Stat label="7-day weight average" value={average === null ? 'Not logged' : `${round(average)} kg`} detail={`${weights.filter(row => row.date >= shiftDate(date, -6) && row.date <= date).length} measured days`}/><Stat label="Average food calories" value={calorieAverage === null ? 'Not logged' : `${round(calorieAverage)} kcal`} detail={`${loggedDays.size} logged days; empty days excluded`}/><Stat label="Steps in seven days" value={steps.recordedDays ? steps.total.toLocaleString() : 'Not logged'} detail={`${steps.recordedDays} recorded days · ${steps.healthDays} from Apple Health; daily sources are not added together`}/><Stat label="Manually logged workouts" value={String(sessions.length)} detail={`In the selected seven days${healthSessions?` · ${healthSessions} Apple Health workouts shown separately`:""}`}/></div>
     <div className="feature-grid"><section className="workout-panel"><h2>Log a measurement</h2><form onSubmit={saveWeight} className="workout-form" key={date + JSON.stringify(data.weights.find(row => row.date === date))}><p className="workout-muted">For {date}. Saving replaces an existing measurement for this date.</p><Field label="Weight (kg)" name="kg" value={data.weights.find(row => row.date === date)?.kg} min={20} max={500}/><Field label="Waist (cm, optional)" name="waist" value={data.weights.find(row => row.date === date)?.waistCm ?? ''} min={20} max={300} required={false}/><button className="shell-button" type="submit">Save measurement</button><p role="status">{error}</p></form></section><section className="workout-panel"><h2>Daily activity</h2><MetricsEditor key={date + JSON.stringify(data.metrics.find(row => row.date === date))} data={data} date={date}/></section></div>
     <section className="workout-panel progress-chart"><h2>Weight over time</h2>{weights.length ? <><div className="feature-chart" role="img" aria-label="Weight measurements over time"><ResponsiveContainer width="100%" height={280}><LineChart data={weights}><CartesianGrid stroke="var(--border)" strokeDasharray="3 3"/><XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={10}/><YAxis domain={['auto', 'auto']} stroke="var(--muted-foreground)" fontSize={10} unit=" kg"/><Tooltip contentStyle={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}/><Line type="linear" dataKey="kg" stroke="var(--primary)" strokeWidth={2} dot={{ r: 4 }} connectNulls={false} isAnimationActive={false}/></LineChart></ResponsiveContainer></div><p className="workout-muted">Only your measured dates are plotted; the line connects those observations. Goal: {data.profile.goalWeightKg} kg.</p></> : <p className="workout-muted">Add your first measurement to start the chart. No progress is estimated or invented.</p>}</section>
     <section className="workout-panel"><h2>Measurements</h2>{!weights.length && <p className="workout-muted">No measurements yet.</p>}<ul className="feature-records">{[...weights].reverse().map(row => <li key={row.id}><div><strong>{row.date} · {row.kg} kg</strong><small>{row.waistCm === null ? 'Waist not recorded' : `Waist ${row.waistCm} cm`}</small></div><div className="workout-actions"><button className="shell-button shell-button-secondary" onClick={() => setDate(row.date)}>Edit measurement</button><ConfirmDelete label={`measurement for ${row.date}`} onDelete={() => changeWorkspace(state => ({ ...state, weights: state.weights.filter(weight => weight.id !== row.id) }))}/></div></li>)}</ul></section>

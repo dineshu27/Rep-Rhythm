@@ -1,0 +1,4 @@
+import {z} from 'zod';
+import {boundedJSON} from '@/lib/account';
+import {healthPublicClient,healthSecret,healthJSON,healthFailure} from '@/lib/health-server';
+export async function POST(request:Request){const parsed=z.object({code:z.string().regex(/^[A-Za-z0-9_-]{43}$/),deviceName:z.string().trim().min(1).max(80)}).strict().safeParse(await boundedJSON(request,2048).catch(()=>null));if(!parsed.success)return healthJSON({error:'Paste a valid, unexpired FitAi pairing code.'},400);const client=healthPublicClient();if(!client)return healthJSON({error:'The dedicated FitAi cloud backend is not configured yet.'},503);const token=healthSecret();const {data,error}=await client.rpc('fitai_health_redeem',{pairing_code:parsed.data.code,device_token:token,device_name:parsed.data.deviceName});return error?healthFailure(error):healthJSON({...data,token});}

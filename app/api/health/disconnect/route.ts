@@ -1,0 +1,2 @@
+import {bearerToken,healthPublicClient,healthJSON,healthFailure} from '@/lib/health-server';
+export async function POST(request:Request){const token=bearerToken(request);if(!token)return healthJSON({error:'An iPhone connection token is required.'},401);const client=healthPublicClient();if(!client)return healthJSON({error:'The dedicated FitAi backend is not configured yet.'},503);const {error}=await client.rpc('fitai_health_disconnect',{device_token:token});return error?healthFailure(error):healthJSON({revoked:true});}

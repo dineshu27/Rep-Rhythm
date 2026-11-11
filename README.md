@@ -8,10 +8,12 @@ A Next.js fitness workspace for profile preferences, food and meal planning, wor
 - **Workouts:** select exercises and start without creating a routine, or record completed sets in one form. Previous set values are shown for review; routines and weekly splits are still available.
 - **Chat:** describe food in grams, completed sets and daily steps in one conversation. Clear reports save automatically with editable receipts and Undo; missing details require clarification or review. Basic logging needs no key; connected personal models require sharing and billing consent. Planning tools remain under Planning & coaching.
 - **Home:** personalised greeting, recorded nutrition and seven-day visuals, optional city/current-area weather, and quick daily actions.
-- **Watch & steps:** daily CSV step import with conflict preview. Live Apple/Google watch sync is not configured; connection requirements are explained in the app.
+- **Watch & steps:** daily CSV import plus a native iPhone HealthKit companion and private account pairing/sync endpoints. Received Apple Health totals appear on Home, Progress and separate workout history. Activation requires the new dedicated backend and a signed iPhone build; Google sync is not configured.
 - **Appearance:** the selected colour also updates the app logo, favicon and install manifest. Installed mobile icon refresh timing depends on the browser/OS.
 
 See [workflow details and limits](docs/simple-logging.md) and [chat, weather and watch setup](docs/daily-companion.md).
+
+See the [iPhone companion source and build status](ios/README.md) and [private Health sync setup](docs/apple-health-companion.md).
 
 ## Run locally
 
@@ -54,7 +56,9 @@ Account synchronization is manual and replaces a complete account snapshot or co
 
 ## Backend activation
 
-No Supabase migration has been applied by this change. The intended backend must be selected and authorized before activation. Do not copy an old app's environment files, keys, or database configuration.
+A new dedicated **FitAi** Supabase project (`iqkxlzlloqvmwykkpbqf`, London) has been created at a quoted $0 monthly project cost. The fitness, fiber, Apple Health and explicit RPC-permission migrations have been applied there as one atomic initial migration. Auth URLs point only to the production FitAi domain and its exact callback. No old project, database, environment file or credentials were copied or changed. Browser records remain local unless explicitly saved to an account.
+
+See the [activation and security review](docs/apple-health-activation.md). The following steps describe configuration for a new environment:
 
 1. Confirm the intended Supabase project through the connected integration.
 2. Review and apply [the normalized migration](supabase/migrations/202611040001_fitness.sql), followed by [the fiber migration](supabase/migrations/202611040002_food_fiber.sql). It creates named tables in `public`; it will fail rather than replace existing conflicting tables.

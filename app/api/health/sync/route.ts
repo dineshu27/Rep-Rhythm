@@ -1,0 +1,4 @@
+import {boundedJSON} from '@/lib/account';
+import {healthBatchSchema,validateHealthWindow} from '@/lib/health';
+import {bearerToken,healthPublicClient,healthJSON,healthFailure} from '@/lib/health-server';
+export async function POST(request:Request){const token=bearerToken(request);if(!token)return healthJSON({error:'An iPhone connection token is required.'},401);let batch;try{batch=validateHealthWindow(healthBatchSchema.parse(await boundedJSON(request,262144)));}catch{return healthJSON({error:'Invalid health sync records or date range. Nothing was saved.'},400);}const client=healthPublicClient();if(!client)return healthJSON({error:'The dedicated FitAi backend is not configured yet.'},503);const {data,error}=await client.rpc('fitai_health_ingest',{device_token:token,batch});return error?healthFailure(error):healthJSON({accepted:true,receivedAt:data.receivedAt});}

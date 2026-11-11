@@ -1,7 +1,7 @@
 /* Public application shell only: account/auth/API responses are never cached. */
-const SHELL = 'fittrack-shell-20261111-simple-v16';
-const ASSETS = 'fittrack-assets-20261111-simple-v16';
-const PAGES = ['/', '/food', '/meals', '/workouts', '/workouts/active', '/progress', '/settings', '/onboarding'];
+const SHELL = 'fittrack-shell-20261111-health-v17';
+const ASSETS = 'fittrack-assets-20261111-health-v17';
+const PAGES = ['/', '/food', '/meals', '/workouts', '/workouts/active', '/progress', '/settings', '/onboarding', '/connections'];
 const PUBLIC_ASSETS = ['/offline.html', '/favicon.ico', '/favicon-16x16.png?v=fitai-arm-9', '/favicon-32x32.png?v=fitai-arm-9', '/manifest.webmanifest', '/icon-192.png?v=fitai-arm-9', '/icon-512.png?v=fitai-arm-9', '/icon-maskable.png?v=fitai-arm-9', '/apple-touch-icon.png?v=fitai-arm-9'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(SHELL).then(async cache => {

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AppleHealthWorkouts } from './apple-health';
 import { TrainingSchedule } from './training-schedule';
 import { muscleGroups, exerciseMuscle } from '@/lib/muscles';
 import { QuickWorkout, AddSessionExercises } from './quick-workout';
@@ -40,7 +41,7 @@ export function WorkoutWorkspace({ active = false }: { active?: boolean }) {
     {(error || importError) && <div className="workout-notice" role="alert">{importError || error}</div>}
     {!data ? <section className="workout-panel"><p>{error ? 'Your existing saved data has been preserved.' : 'Loading your workouts…'}</p>{error && <div className="workout-actions">{raw && <button className="shell-button shell-button-secondary" onClick={() => exportWorkouts(raw)}>Export recovery copy</button>}<button className="shell-button shell-button-secondary" onClick={() => { if (window.confirm('Reset all workout data in this browser? Export a recovery copy first.')) replaceWorkouts(initialWorkouts()); }}>Reset workout data</button></div>}</section> : <>
       {active ? <ActiveWorkout state={data}/> : <Planner state={data}/>}
-      {!active && <History sessions={data.history}/>}
+      {!active && <><History sessions={data.history}/><AppleHealthWorkouts/></>}
     </>}
     <div className="workout-backup"><button disabled={!data} className="shell-button shell-button-secondary" onClick={() => exportWorkouts()}>Export workout backup</button><label className="shell-button shell-button-secondary workout-import">Import backup<input type="file" accept="application/json,.json" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void importBackup(file); }}/></label></div>
   </div>;

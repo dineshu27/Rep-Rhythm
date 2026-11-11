@@ -8,3 +8,8 @@ playwright-report/
 test-results/
 coverage/
 .vercel/
+ios/**/.build/
+ios/**/.swiftpm/
+ios/**/DerivedData/
+ios/**/xcuserdata/
+ios/**/*.xcuserstate

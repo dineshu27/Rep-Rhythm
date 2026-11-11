@@ -38,9 +38,10 @@ describe('normalized PostgreSQL storage and owner boundaries', () => {
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
       create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
-      grant usage on schema auth to anon,authenticated; grant usage on schema public to anon,authenticated;`);
+      alter default privileges in schema public grant execute on functions to anon,authenticated; grant usage on schema auth to anon,authenticated; grant usage on schema public to anon,authenticated;`);
     await db.exec(readFileSync(new URL('../supabase/migrations/202611040001_fitness.sql', import.meta.url), 'utf8'));
     await db.exec(readFileSync(new URL('../supabase/migrations/202611040002_food_fiber.sql', import.meta.url), 'utf8'));
+    await db.exec(readFileSync(new URL('../supabase/migrations/202611110002_cloud_rpc_permissions.sql', import.meta.url), 'utf8'));
   }, 30000);
   beforeEach(async () => { await db.exec(`reset role; truncate auth.users cascade; insert into auth.users values ('${a}'),('${b}');`); await asUser(a); });
   afterAll(async () => { await db?.close(); });
