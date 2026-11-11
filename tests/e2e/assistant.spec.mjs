@@ -51,3 +51,6 @@ test('live workflow shares only consented text and leaves missing grams for revi
   await page.getByRole('button', { name: 'Save reviewed foods to diary' }).click(); await expect(page.getByRole('main').getByRole('alert')).toContainText('Choose a matching food');
   expect(await page.evaluate(() => localStorage.getItem('fittrack-workspace-v1'))).toBeNull();
 });
+test('coaching tabs stay in planning and can return to daily logging chat',async({page})=>{
+ await page.goto('/assistant?view=coach&mode=meals');const tools=page.getByRole('navigation',{name:'Assistant tools',exact:true});for(const link of await tools.getByRole('link').all())await expect(link).toHaveAttribute('href',/view=coach/);await tools.getByRole('link').nth(1).click();await expect(page).toHaveURL(/view=coach&mode=workout/);await expect(page.getByRole('button',{name:'Try example (no AI call)',exact:true})).toBeVisible();await page.goto('/assistant');await expect(page.getByRole('heading',{name:'Chat. Log. Keep going.'})).toBeVisible();
+});
