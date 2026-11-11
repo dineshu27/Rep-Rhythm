@@ -76,6 +76,9 @@ export type WorkoutAction =
   | { type: 'delete-plan'; planId: string }
   | { type: 'replace-plans'; plans: Plan[] }
   | { type: 'save-plan'; plan: Plan }
+  | { type: 'start-free'; id: string; name: string; now: string; exercises: Exercise[] }
+  | { type: 'record-session'; session: Session }
+  | { type: 'add-session-exercises'; exercises: Exercise[] }
   | { type: 'start'; planId: string; id: string; now: string }
   | { type: 'save-set'; sessionId: string; set: WorkoutSet }
   | { type: 'log-rounds'; sessionId: string; exerciseId: string; amount: number; weightKg: number; ids: string[] }
@@ -105,6 +108,15 @@ export function workoutReducer(state: WorkoutState, action: WorkoutAction): Work
     case 'save-plan':
       if (!state.plans.some(plan => plan.id === action.plan.id)) throw new Error('Plan no longer exists.');
       next = { ...state, plans: state.plans.map(plan => plan.id === action.plan.id ? planSchema.parse(action.plan) : plan) }; break;
+    case 'start-free':
+      if (state.active) throw new Error('Finish or discard your current session first.');
+      next = { ...state, active: { id: action.id, planId: `quick-${action.id}`, name: action.name, startedAt: action.now, finishedAt: null, exercises: action.exercises, sets: [], notes: '' }, restUntil: null }; break;
+    case 'record-session':
+      if (state.history.length >= 1000 || !action.session.finishedAt || !action.session.sets.length) throw new Error('A completed exercise needs logged sets and room in your history.');
+      next = { ...state, history: [sessionSchema.parse(action.session), ...state.history] }; break;
+    case 'add-session-exercises':
+      if (!state.active) throw new Error('Start a workout first.');
+      next = { ...state, active: { ...state.active, exercises: [...state.active.exercises, ...action.exercises] } }; break;
     case 'start': {
       if (state.active) throw new Error('Finish or discard your current session first.');
       const plan = state.plans.find(plan => plan.id === action.planId);
@@ -138,3 +150,13 @@ export function workoutReducer(state: WorkoutState, action: WorkoutAction): Work
 export function remainingSeconds(until: number | null, now: number) { return until === null ? 0 : Math.max(0, Math.ceil((until - now) / 1000)); }
 export function sessionVolume(session: Session) { return session.sets.filter(set => set.kind === 'reps').reduce((total, set) => total + set.amount * set.weightKg, 0); }
 export function formatTime(seconds: number) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
+
+export function previousExerciseSet(state: WorkoutState, exercise: Exercise) {
+  const sessions = [...state.history].sort((a,b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? ''));
+  for (const session of sessions) {
+    const original = session.exercises.find(row => row.name.toLowerCase() === exercise.name.toLowerCase() && row.kind === exercise.kind);
+    const set = original && session.sets.filter(row => row.exerciseId === original.id && row.kind === exercise.kind).at(-1);
+    if (set) return { set, date: session.finishedAt! };
+  }
+  return null;
+}

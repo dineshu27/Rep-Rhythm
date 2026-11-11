@@ -2,26 +2,25 @@ import { test, expect } from '@playwright/test';
 
 test('grams immediately calculate all nutrients and preserve old fiber snapshots', async ({ page }) => {
   await page.goto('/food');
-  await page.getByLabel('Starter food', { exact: true }).selectOption('usda-168878');
-  await page.getByRole('button', { name: 'Add selected starter food', exact: true }).click();
-  const form = page.getByRole('form', { name: 'Food entry', exact: true });
-  const preview = page.getByRole('status', { name: 'Calculated portion nutrition', exact: true });
-  await form.getByLabel('Portion (g)', { exact: true }).fill('150');
-  await expect(preview).toContainText('195 kcal');
-  await expect(preview).toContainText('Protein 4 g');
-  await expect(preview).toContainText('Fat 0.4 g');
-  await expect(preview).toContainText('Carbs 42.3 g');
-  await expect(preview).toContainText('Fiber 0.6 g');
-  await expect(page.locator('.feature-totals')).toContainText('0 food entries');
-  await form.getByRole('button', { name: 'Log food', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('Fiber 0.6 g');
-  await page.getByRole('button', { name: 'Edit food', exact: true }).click();
-  const edit = page.getByRole('form', { name: 'Edit food', exact: true });
-  await edit.getByLabel('Fiber (g) per 100 g', { exact: true }).fill('3');
-  await edit.getByRole('button', { name: 'Save food', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('Fiber 0.6 g');
+  await page.getByLabel('Search foods',{exact:true}).fill('rice white long grain regular enriched cooked');
+  const row = page.locator('.quick-food-row[data-food-id="usda-168878"]');
+  await row.getByRole('spinbutton').fill('150');
+  await expect(row).toContainText('195 kcal');
+  await expect(row).toContainText('P 4');
+  await expect(row).toContainText('F 0.4');
+  await expect(row).toContainText('C 42.3');
+  await expect(row).toContainText('Fiber 0.6');
+  await expect(page.locator('.diary-meals .diary-food-line')).toHaveCount(0);
+  await row.getByRole('button',{name:'Add',exact:true}).click();
+  await expect(page.locator('.day-toolbar')).toContainText('Fiber 0.6 g');
+  await page.locator('.food-manager > summary').click();
+  await page.getByRole('button',{name:'Edit food',exact:true}).click();
+  const edit = page.getByRole('form',{name:'Edit food',exact:true});
+  await edit.getByLabel('Fiber (g) per 100 g',{exact:true}).fill('3');
+  await edit.getByRole('button',{name:'Save food',exact:true}).click();
+  await expect(page.locator('.day-toolbar')).toContainText('Fiber 0.6 g');
   await page.reload();
-  await expect(page.locator('.feature-totals')).toContainText('195 kcal');
+  await expect(page.locator('.day-toolbar')).toContainText('195 kcal');
   // Simulate the previous release's records, which did not contain fiber at all.
   await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('fittrack-workspace-v1'));
@@ -30,8 +29,8 @@ test('grams immediately calculate all nutrients and preserve old fiber snapshots
     localStorage.setItem('fittrack-workspace-v1', JSON.stringify(state));
   });
   await page.reload();
-  await expect(page.locator('.feature-totals')).toContainText('Fiber not recorded');
-  await expect(page.locator('.feature-totals')).toContainText('195 kcal');
+  await expect(page.locator('.day-toolbar')).toContainText('Fiber not recorded');
+  await expect(page.locator('.day-toolbar')).toContainText('195 kcal');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

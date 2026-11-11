@@ -2,6 +2,15 @@
 
 A Next.js fitness workspace for profile preferences, food and meal planning, workouts, and progress. Core tracking works without Supabase configuration and stores records in the current browser. Optional account storage uses normalized PostgreSQL tables and Supabase authentication.
 
+## Quick logging
+
+- **Food:** search or choose Recent → enter grams → Add. Repeat yesterday’s meal, edit entries inline, or undo a removal. Package labels and saved-food management are secondary.
+- **Workouts:** select exercises and start without creating a routine, or record completed sets in one form. Previous set values are shown for review; routines and weekly splits are still available.
+- **Assistant:** Basic helper works without keys using text parsing and catalogue search. Connect a personal key for model-powered replies; provider sharing and billing consent still apply.
+- **Appearance:** the selected colour also updates the app logo, favicon and install manifest. Installed mobile icon refresh timing depends on the browser/OS.
+
+See [workflow details and limits](docs/simple-logging.md).
+
 ## Run locally
 
 Use Node 24 (the tested runtime) and the committed lockfile:
@@ -23,7 +32,7 @@ For a production build, run `npm run build`, then `npm start`. The Vercel projec
 | `/settings` | Appearance and custom colours, personal AI keys, profile, backups and data controls |
 | `/food` | Searchable user food library, per-100-g source values, gram portions, live calorie/protein/fat/carb/fiber calculations, diary edit/delete, immutable food snapshots |
 | `/meals` | Seven-day navigation, editable meal ingredients, calculated nutrition and explicit ingredient logging |
-| `/workouts` | Editable four-day upper/lower plans and session history |
+| `/workouts` | Quick sessions, completed-exercise logging, searchable exercises, editable routines, weekly splits and history |
 | `/workouts/active` | Reps, kg, timed holds, rest timer, notes, resume, finish, and set corrections |
 | `/progress` | Weight/waist history, Recharts weight plot, seven-day averages, steps, water and cardio/recovery minutes |
 | `/auth` | Email sign-in and manual account save/load/export/deletion when configured |
@@ -75,11 +84,11 @@ PLAYWRIGHT_CHANNEL=chrome PLAYWRIGHT_PRODUCTION=1 npm run test:e2e -- --workers=
 
 Playwright uses port 3104. Set `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome. Alternatively run `npx playwright install chromium` and omit that variable. `PLAYWRIGHT_PRODUCTION=1` requires a completed build; otherwise the runner starts the development server.
 
-Validation includes 52 unit/database checks, 36 feature browser checks and two automated accessibility checks across desktop/mobile configurations. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
+Validation covers unit/database/API checks and full desktop/mobile browser workflows, including automated accessibility checks. The production dependency audit is clean; development-tool advisories remain in the full audit. Automated accessibility checks do not replace manual assistive-technology testing.
 
 ## Phase status and next review
 
-See [the review handoff](docs/next-review.md). Profile, nutrition, meals, workouts, progress and local release checks are implemented. Normalized account storage and auth code are ready for hosted activation/verification. The AI assistant supports conversational food logging, workout suggestions, meal ideas and weekly coaching. Personal OpenAI/Anthropic connections use server-encrypted eight-hour cookies and do not require Supabase. App-funded OpenAI remains independently disabled pending account/quota setup and cost approval. Automated provider tests are mocked; a real provider round-trip requires a user-supplied key and explicit request consent. See [personal AI, appearance and flexible training](docs/personal-ai.md) and [app-funded activation](docs/ai-assistant.md).
+See [the review handoff](docs/next-review.md). Profile, nutrition, meals, workouts, progress and local release checks are implemented. Normalized account storage and auth code are ready for hosted activation/verification. The assistant provides a key-free Basic helper for food parsing, catalogue starters and recorded weekly summaries; connected provider keys enable conversational model responses. Personal OpenAI/Anthropic connections use server-encrypted eight-hour cookies and do not require Supabase. App-funded OpenAI remains independently disabled pending account/quota setup and cost approval. Automated provider tests are mocked; a real provider round-trip requires a user-supplied key and explicit request consent. See [personal AI, appearance and flexible training](docs/personal-ai.md) and [app-funded activation](docs/ai-assistant.md).
 
 The old `dineshu27/strato` repository, Vercel project `code`, and its deployments remain available. This repository's `supabase/schema.sql` belongs only to `/prototype`; do not apply it as the normalized production schema.
 
@@ -87,6 +96,6 @@ Food portions scale each per-100-g value by grams ÷ 100. Fiber missing from an 
 
 ## Broad food search
 
-Use **Food diary → Search all foods** to find ingredients and dishes such as banana, cooked rice, dosa, paneer, curry or biryani. Choose **Add and log food**, then enter grams. The result is saved in the personal library; choosing a previously saved item uses the saved values and preserves edits. Results paginate in groups of 20. Search supports some common UK names, including aubergine, courgette and yoghurt.
+Use **Food diary → Add food** to find ingredients and dishes such as banana, cooked rice, dosa, paneer, curry or biryani. Enter grams directly beside a search result and tap **Add**. The result is saved in the personal library; choosing a previously saved item uses the saved values and preserves edits. Results paginate in groups of 20. Search supports some common UK names, including aubergine, courgette and yoghurt.
 
 The server bundles a compact USDA SR Legacy, Foundation and FNDDS index. It does not send queries to an external nutrition service. The index includes only foods with complete calorie/protein/fat/carbohydrate values per 100 g; unknown fiber remains unknown. These are reference estimates, not verified nutrition for every brand or homemade recipe. Exact products and missing foods can still be entered from a label. See [dataset provenance and rebuild instructions](data/README.md).

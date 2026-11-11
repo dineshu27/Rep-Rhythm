@@ -120,7 +120,7 @@ test('workout changes synchronize between open tabs', async ({ page, context, is
   await expect(page).toHaveURL(/\/food$/);
   await secondLogger.getByLabel('Dumbbell bench press reps', { exact: true }).fill('8');
   await secondLogger.getByRole('button', { name: 'Log set', exact: true }).click();
-  await nav.getByRole('link', { name: isMobile ? 'Workouts' : 'Workout planner', exact: true }).click();
+  await nav.getByRole('link', { name: 'Workouts', exact: true }).click();
   await page.getByRole('link', { name: 'Resume workout', exact: false }).click();
   await expect(page.getByText('3 / 18 planned sets', { exact: false })).toBeVisible();
   await second.close();
@@ -137,7 +137,8 @@ test('rescheduling Monday to Tuesday updates the saved header, coverage, other t
  await card.getByRole('button', {name:'Save plan',exact:true}).click();
  await expect(card.locator('.workout-card-heading')).toHaveText('Tuesday');
  await expect(card.getByRole('status')).toContainText('Plan saved for Tuesday');
- await expect(card.locator('details')).not.toHaveAttribute('open');
+ await expect(card.locator('.workout-plan-editor')).not.toHaveAttribute('open');
+ await page.locator('.weekly-tools > summary').click();
  await expect(page.getByLabel('Chest, Monday: not planned',{exact:true})).toBeVisible();
  await expect(page.getByLabel('Chest, Tuesday: planned',{exact:true})).toBeVisible();
  await expect(other.locator('.workout-plan-card').first().locator('.workout-card-heading')).toHaveText('Tuesday');

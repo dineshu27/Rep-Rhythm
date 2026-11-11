@@ -2,7 +2,7 @@ export const navigation = [
   { href: '/', label: 'Home', icon: 'home' },
   { href: '/food', label: 'Food diary', icon: 'food' },
   { href: '/meals', label: 'Meal planner', icon: 'meals' },
-  { href: '/workouts', label: 'Workout planner', icon: 'workouts' },
+  { href: '/workouts', label: 'Workouts', icon: 'workouts' },
   { href: '/workouts/active', label: 'Active workout', icon: 'active' },
   { href: '/progress', label: 'Progress', icon: 'progress' },
   { href: '/assistant', label: 'AI assistant', icon: 'assistant' },

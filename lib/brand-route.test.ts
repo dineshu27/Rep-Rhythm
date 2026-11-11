@@ -1,0 +1,7 @@
+import { expect,it } from 'vitest';
+import { GET } from '../app/api/brand/icon/route';
+import { GET as manifest } from '../app/api/brand/manifest/route';
+it('serves bounded real PNG variants and rejects arbitrary sizes and paths',async()=>{const result=await GET(new Request('https://fit.test/api/brand/icon?color=%231768c4&size=32'));expect(result.status).toBe(200);const bytes=new Uint8Array(await result.arrayBuffer());expect([...bytes.slice(0,8)]).toEqual([137,80,78,71,13,10,26,10]);expect(result.headers.get('cache-control')).toContain('public');expect((await GET(new Request('https://fit.test/api/brand/icon?color=../../private&size=9999'))).status).toBe(400);});
+it('keeps the app identity while pointing the install manifest at the chosen colour',async()=>{const result=await manifest(new Request('https://fit.test/api/brand/manifest?color=%231768c4'));const body=await result.json();expect(body.name).toBe('FitAi');expect(body.id).toBe('/');expect(body.icons.every((icon:{src:string})=>icon.src.includes('%231768c4'))).toBe(true);});
+
+it('recolours the actual artwork rather than serving the same bytes for every theme',async()=>{const a=await GET(new Request('https://fit.test/api/brand/icon?color=%231768c4&size=32'));const b=await GET(new Request('https://fit.test/api/brand/icon?color=%23137b61&size=32'));expect(Buffer.from(await a.arrayBuffer()).equals(Buffer.from(await b.arrayBuffer()))).toBe(false);});

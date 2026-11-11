@@ -1,0 +1,122 @@
+/* Task-first layouts keep the user's selected palette. */
+.brand-mark{filter:var(--logo-filter,none)}
+.shell-sidebar-note{display:none}
+.shell-page-heading{margin-bottom:18px!important}
+.shell-page-heading p{max-width:65ch}
+.shell-page-heading .shell-overline{display:none}
+.shell-main{padding-top:24px!important}
+.workout-storage-note{font-size:12px!important;margin:0 0 14px!important}
+.quick-food,.quick-workout{min-width:0}
+.workout-panel h2{font-size:20px}
+.day-toolbar{display:grid;grid-template-columns:minmax(240px,1fr) minmax(230px,1fr);gap:16px;align-items:center}
+.day-toolbar>.nutrition-values{grid-column:1/-1}
+.day-switcher{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.day-switcher label{display:grid;gap:4px;font-size:12px;color:var(--muted-foreground)}
+.day-switcher input{background:var(--input);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--foreground);font:inherit;font-size:14px}
+.quick-energy{display:grid;gap:4px}
+.quick-energy strong{font-size:27px;letter-spacing:-1px}
+.quick-energy small{font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted-foreground)}
+.quick-energy span{color:var(--muted-foreground);font-size:12px}
+.fast-add{margin-top:16px}
+.fast-add .feature-section-heading{align-items:flex-start;gap:12px;flex-wrap:wrap}
+.fast-add .feature-section-heading p{margin:5px 0 12px}
+.meal-chips,.quick-tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.quick-chip{border:1px solid var(--border);background:var(--card);color:var(--foreground);padding:9px 13px;border-radius:99px;font:inherit;font-size:13px;font-weight:650;cursor:pointer;min-height:40px}
+.quick-chip[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--primary-foreground)}
+.quick-tabs .shell-text-link{padding:8px 4px;min-height:36px}
+.quick-tabs .shell-text-link[aria-pressed=true]{border-bottom:2px solid var(--primary);font-weight:750}
+.instant-search{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:13px;background:var(--input);padding:7px 8px 7px 14px}
+.instant-search input{flex:1;width:0;min-width:0;border:0;outline-offset:4px;padding:8px;background:transparent;color:var(--foreground);font:inherit;font-size:15px}
+.quick-food-results{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
+.quick-food-row{display:grid;grid-template-columns:minmax(0,1fr) 72px 85px;gap:10px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);min-width:0}
+.quick-food-name{min-width:0;display:grid;gap:5px}
+.quick-food-name strong{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.quick-food-name small{font-size:11px;color:var(--muted-foreground);line-height:1.6}
+.quick-food-row label{display:grid;gap:3px;font-size:10px;color:var(--muted-foreground)}
+.quick-food-row input{width:100%;min-width:0;padding:8px;border:1px solid var(--border);background:var(--input);color:var(--foreground);border-radius:8px;font:inherit;font-size:14px;min-height:40px}
+.quick-food-row .shell-button{font-size:12px;padding:10px 9px;min-width:0;min-height:40px}
+.quick-notice{display:flex;gap:14px;align-items:center;flex-wrap:wrap;color:var(--primary);font-size:13px;padding:12px 0;min-height:30px}
+.quick-notice .shell-text-link{display:inline-flex;gap:5px;align-items:center}
+.diary-meals{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:4px 0 18px}
+.diary-meal-card h2{display:flex;align-items:baseline;gap:12px;font-size:17px}
+.diary-meal-card h2 small{color:var(--muted-foreground);font-weight:500;font-size:12px}
+.diary-meal-card .feature-section-heading{flex-wrap:wrap;gap:10px}
+.diary-meal-card .shell-text-link{font-size:12px;display:inline-flex;align-items:center;gap:4px;min-height:32px}
+.diary-food-line{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.diary-food-line>div:first-child{display:grid;gap:4px;flex:1;min-width:130px}
+.diary-food-line strong{font-size:13px;overflow-wrap:anywhere}
+.diary-food-line small{font-size:12px;color:var(--muted-foreground)}
+.quick-entry-edit{width:100%;display:flex;align-items:end;gap:12px;flex-wrap:wrap;background:var(--soft);padding:12px;border-radius:10px}
+.quick-entry-edit label{display:grid;gap:4px;flex:1;font-size:12px;min-width:110px}
+.quick-entry-edit input,.quick-entry-edit select{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--input);color:var(--foreground)}
+.repeat-meal{margin-top:10px}
+.food-manager summary,.weekly-tools>summary{font-size:14px;font-weight:650;cursor:pointer;padding:4px 0}
+.food-manager[open]>summary,.weekly-tools[open]>summary{margin-bottom:16px}
+.saved-food-list{max-height:430px;overflow:auto;margin-top:16px}
+.exercise-search-controls{display:grid;grid-template-columns:1fr minmax(130px,.4fr);gap:12px;margin:14px 0}
+.exercise-search-controls label,.quick-workout-name{display:grid;gap:6px;font-size:12px;color:var(--muted-foreground)}
+.exercise-search-controls input,.exercise-search-controls select,.quick-workout-name input{width:100%;min-height:42px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--foreground);padding:10px;font:inherit;font-size:14px}
+.exercise-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:230px;overflow:auto;padding:2px}
+.exercise-choice{display:flex!important;align-items:center;gap:10px;border:1px solid var(--border);padding:11px;border-radius:10px;cursor:pointer}
+.exercise-choice:has(input:checked){border-color:var(--primary);background:var(--soft)}
+.exercise-choice input{width:17px!important;height:17px!important;accent-color:var(--primary);flex-shrink:0}
+.exercise-choice span{display:grid;gap:4px;min-width:0}
+.exercise-choice strong{font-size:12px;overflow-wrap:anywhere}
+.exercise-choice small{font-size:11px;color:var(--muted-foreground)}
+.quick-workout{margin-bottom:18px}
+.quick-workout-name{max-width:440px}
+.quick-number-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.weekly-tools{margin:16px 0}
+.weekly-tools .training-schedule{padding:0!important;border:0;background:transparent}
+.routine-exercises>summary{font-size:12px;color:var(--primary);cursor:pointer;padding:8px 0}
+.routine-exercises[open]{margin-bottom:12px}
+.workout-plan-grid{gap:16px!important}
+.workout-plan-card{padding:20px!important}
+.workout-plan-card .workout-card-heading{margin-bottom:8px}
+.workout-plan-card .workout-muted{font-size:12px}
+.workout-plan-card .remove-plan{margin-top:10px}
+.workout-plan-card .workout-plan-editor{margin-top:12px}
+.workout-session-grid{grid-template-columns:1fr!important;max-width:900px}
+.workout-session-grid>.workout-panel{padding:20px}
+.workout-session-grid h2{font-size:19px}
+.workout-session-grid .workout-log-form{display:grid;gap:10px}
+.workout-session-grid .workout-log-form>label{max-width:160px}
+.workout-session-grid .workout-log-form>button{justify-self:start;min-width:145px}
+.previous-set{font-size:12px;line-height:1.7;color:var(--muted-foreground);background:var(--soft);padding:10px 12px;border-radius:9px}
+.previous-set strong{color:var(--foreground)}
+.today-actions{margin-bottom:18px}
+.today-actions h2{margin-bottom:5px}
+.today-action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.quick-weight-form{display:flex;gap:12px;align-items:end;margin-top:16px;flex-wrap:wrap}
+.quick-weight-form label{display:grid;gap:5px;font-size:12px}
+.quick-weight-form input{padding:10px;border:1px solid var(--border);background:var(--input);color:var(--foreground);border-radius:9px}
+.today-actions>p:empty{display:none}
+.nutrition-grid .feature-stat{padding:18px!important}
+.nutrition-grid .feature-stat>strong{font-size:26px!important}
+.nutrition-grid .stat-heading{font-size:12px}
+.chat-workspace,.assistant-workbench{margin-top:12px!important}
+.chat-tools>div:first-child{display:none}
+.chat-welcome{padding-top:20px!important;padding-bottom:20px!important}
+.chat-welcome-mark{display:none!important}
+.chat-welcome h3{font-size:20px!important}
+.chat-tools{padding:18px!important}
+.assistant-food{padding:16px!important}
+@media(max-width:1150px){.quick-food-results{grid-template-columns:1fr}.today-action-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){
+ .shell-main{padding-top:16px!important}.shell-page-heading h1{font-size:27px!important}.shell-page-heading .shell-badge{display:none}
+ .day-toolbar{grid-template-columns:1fr;gap:12px;padding:16px!important}.quick-energy strong{font-size:24px}.day-toolbar>.nutrition-values{grid-column:auto}
+ .diary-meals{grid-template-columns:1fr}.fast-add{padding:16px!important}.fast-add .feature-section-heading{display:block}.fast-add .feature-section-heading>a{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px}
+ .quick-food-row{grid-template-columns:minmax(0,1fr) 62px 72px;gap:8px}.quick-food-name strong{font-size:12px}.quick-food-name small{font-size:10px}.quick-food-row .shell-button{font-size:11px;padding:10px 5px}
+ .instant-search{gap:5px;padding-left:9px}.instant-search input{font-size:14px}.instant-search .shell-button{padding:10px 12px;font-size:12px}.meal-chips{gap:6px}.quick-chip{font-size:12px;padding:9px 11px}
+ .exercise-choices{grid-template-columns:1fr;max-height:260px}.exercise-search-controls{grid-template-columns:1fr 125px;gap:8px}.quick-number-fields{gap:8px}
+ .quick-workout{padding:16px!important}.quick-workout h2{font-size:20px}.workout-plan-card{padding:16px!important}.workout-log-form .workout-fields{max-width:100%}
+ .today-actions{padding:16px!important}.today-action-grid .shell-button{font-size:12px;padding:11px 8px}.today-actions h2{font-size:19px}.today-actions .workout-muted{font-size:12px}
+}
+
+.settings-section{margin-top:16px}.settings-section>summary{font-size:15px;font-weight:650;cursor:pointer;padding:3px 0}.settings-section[open]>summary{margin-bottom:18px}.settings-section .workout-panel{border:0;box-shadow:none;padding:0;background:transparent}.settings-section .profile-form{padding:0!important;border:0!important}.progress-chart{margin-top:20px}.meal-day-card[data-today=true]{border-color:var(--primary)}
+
+.optional-workout-name{font-size:12px;margin:10px 0;color:var(--muted-foreground)}.optional-workout-name summary{cursor:pointer}.optional-workout-name[open] summary{margin-bottom:10px}
+@media(max-width:700px){.fast-add .feature-section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.fast-add .feature-section-heading>a{margin:0;font-size:12px}.fast-add .feature-section-heading h2{margin:0}.day-toolbar{padding:12px 16px!important;gap:9px}.quick-energy{gap:1px}.meal-chips{margin:10px 0}.quick-tabs{gap:12px;margin:6px 0}.quick-tabs .shell-text-link{font-size:11px}.exercise-choices{max-height:195px}.workout-storage-note{line-height:1.5!important;margin-bottom:12px!important}.quick-workout>.feature-section-heading p{font-size:12px;line-height:1.6}.workout-plan-grid{grid-template-columns:1fr!important}}
+
+.chat-welcome h3,.chat-welcome>p{display:none}.chat-welcome{padding:12px 18px!important}.chat-starters{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}.chat-starters button{font-size:11px!important;padding:9px!important}.chat-panel-heading{padding:16px 18px!important}.chat-service-status{padding:0 18px!important;margin:0 0 10px!important}.chat-tools .assistant-tabs{gap:6px}.chat-tools .assistant-tabs a{font-size:12px!important;padding:10px!important}
+@media(max-width:700px){.chat-tools{padding:12px!important}.assistant-workbench{gap:12px!important}.chat-tools .assistant-tabs{display:flex!important;flex-wrap:nowrap!important;justify-content:space-between;grid-column:1/-1}.chat-tools .assistant-tabs a{flex:1;white-space:nowrap;font-size:11px!important;padding:9px 6px!important;min-height:36px;display:flex;justify-content:center;align-items:center}.chat-tools>label{font-size:11px}.chat-tools>button{font-size:11px!important;padding:10px 12px!important}.chat-tools>a:last-child{font-size:11px!important;min-height:28px}.chat-panel-heading .shell-overline{display:none}.chat-panel-heading h2{font-size:18px!important}.chat-service-status{font-size:11px!important;line-height:1.6!important}.chat-panel-heading{padding:12px 16px!important}.chat-welcome{padding:8px 14px!important}.chat-composer{padding:14px!important}.chat-composer textarea{min-height:90px!important}.chat-panel .shell-badge{font-size:10px!important}.chat-panel .chat-transcript:has(.chat-welcome){min-height:0!important;max-height:none!important}.chat-panel .chat-transcript:has(.chat-message){max-height:300px!important;min-height:120px!important}}

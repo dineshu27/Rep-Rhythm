@@ -4,26 +4,27 @@ test('food snapshots, ingredient meals, and diary totals stay consistent', async
   page.on('dialog', dialog => dialog.accept());
   await page.goto('/food');
   const date = await page.getByLabel('Diary date', { exact: true }).inputValue();
-  await page.getByRole('button', { name: 'Add food', exact: false }).click();
+  await page.getByRole('button', { name: '+ Custom food', exact: true }).click();
   const add = page.getByRole('form', { name: 'Add food', exact: true });
   await add.getByLabel('Food name', { exact: true }).fill('Test oats');
   for (const [label, value] of [['Energy (kcal) per 100 g', '200'], ['Protein (g) per 100 g', '10'], ['Fat (g) per 100 g', '5'], ['Carbs (g) per 100 g', '25']]) await add.getByLabel(label, { exact: true }).fill(value);
   await add.getByLabel('Source or package description', { exact: true }).fill('Test package label');
   await add.getByLabel('Nutrition source', { exact: true }).selectOption('label');
   await add.getByRole('button', { name: 'Save food', exact: true }).click();
-  const entry = page.getByRole('form', { name: 'Food entry', exact: true });
-  await entry.getByLabel('Portion (g)', { exact: true }).fill('150');
-  await entry.getByRole('button', { name: 'Log food', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('300 kcal');
+  const quick = page.locator('.quick-food-row').filter({hasText:'Test oats'});
+  await quick.getByRole('spinbutton').fill('150');
+  await quick.getByRole('button',{name:'Add',exact:true}).click();
+  await expect(page.locator('.day-toolbar')).toContainText('300 kcal');
   await page.getByRole('button', { name: 'Edit food', exact: true }).click();
   const editFood = page.getByRole('form', { name: 'Edit food', exact: true });
   await editFood.getByLabel('Energy (kcal) per 100 g', { exact: true }).fill('400');
   await editFood.getByRole('button', { name: 'Save food', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('300 kcal');
-  await page.getByRole('button', { name: 'Edit entry', exact: true }).click();
+  await expect(page.locator('.day-toolbar')).toContainText('300 kcal');
+  const entry = page.locator('.diary-meals .diary-food-line').first();
+  await entry.getByRole('button', { name: 'Edit Test oats entry', exact: true }).click();
   await entry.getByLabel('Portion (g)', { exact: true }).fill('200');
   await entry.getByRole('button', { name: 'Save entry changes', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('400 kcal');
+  await expect(page.locator('.day-toolbar')).toContainText('400 kcal');
   await page.goto('/meals');
   await page.getByRole('button', { name: 'Plan a meal', exact: false }).click();
   const meal = page.getByRole('form', { name: 'Meal plan', exact: true });
@@ -34,12 +35,13 @@ test('food snapshots, ingredient meals, and diary totals stay consistent', async
   await expect(page.getByText('Oat bowl', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Log ingredients', exact: true }).click();
   await page.goto('/food');
-  await expect(page.locator('.feature-totals')).toContainText('600 kcal');
-  await expect(page.locator('.feature-totals')).toContainText('2 food entries');
+  await expect(page.locator('.day-toolbar')).toContainText('600 kcal');
+  await expect(page.locator('.diary-meals .diary-food-line')).toHaveCount(2);
+  await page.locator('.food-manager > summary').click();
   await page.getByRole('button', { name: 'Delete Test oats', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Remove this food from planned meals');
   await page.reload();
-  await expect(page.locator('.feature-totals')).toContainText('600 kcal');
+  await expect(page.locator('.day-toolbar')).toContainText('600 kcal');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -65,6 +67,7 @@ test('onboarding, measurements, activity and full backup recovery', async ({ pag
   await expect(page.getByRole('img', { name: 'Weight measurements over time', exact: true })).toBeVisible();
   await expect(page.getByLabel('Daily steps', { exact: true })).toHaveValue('6000');
   await page.goto('/settings');
+  await page.getByText('Backup, restore & data controls',{exact:true}).click();
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export all data', exact: false }).click();
   const download = await downloadPromise; const stream = await download.createReadStream();
@@ -92,6 +95,7 @@ test('installed public shell reloads offline with browser records', async ({ pag
   await page.getByLabel('Profile name', { exact: true }).fill('Offline profile');
   await page.getByRole('button', { name: 'Save and start tracking', exact: true }).click();
   await page.goto('/settings');
+  await page.getByText('Profile & nutrition targets',{exact:true}).click();
   await page.getByLabel('Profile name', { exact: true }).waitFor();
   await page.evaluate(async () => { await navigator.serviceWorker.ready; if (!navigator.serviceWorker.controller) await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })); });
   // Allow every route/chunk used here to be fetched before cutting the connection.

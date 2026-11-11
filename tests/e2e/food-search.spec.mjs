@@ -1,85 +1,15 @@
-import { test, expect } from '@playwright/test';
+import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-
-async function search(page, query) {
-  const region = page.getByRole('region', { name: 'Food search', exact: true });
-  await region.getByLabel('Search foods', { exact: true }).fill(query);
-  await region.getByRole('button', { name: 'Search foods', exact: true }).click();
-  await expect(region.getByRole('status', { name: 'Food search status', exact: true })).toContainText('matches for');
-  return region;
-}
-
-test('search finds new foods and dishes, then logs their gram-based nutrition', async ({ page }) => {
-  await page.goto('/food');
-  const region = await search(page, 'bananas raw');
-  const banana = region.locator('[data-food-id="usda-173944"]');
-  await expect(banana).toContainText('Bananas, raw');
-  const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
-  expect(accessibility.violations).toEqual([]);
-  await banana.getByRole('button', { name: 'Add and log food', exact: true }).click();
-  const entry = page.getByRole('form', { name: 'Food entry', exact: true });
-  await expect(entry.getByLabel('Food', { exact: true })).toHaveValue('usda-173944');
-  await entry.getByLabel('Portion (g)', { exact: true }).fill('150');
-  await expect(page.getByRole('status', { name: 'Calculated portion nutrition', exact: true })).toContainText('133.5 kcal');
-  await entry.getByRole('button', { name: 'Log food', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('133.5 kcal');
-  await search(page, 'biryani chicken');
-  await expect(region.locator('.food-search-results')).toContainText('Biryani with chicken');
-  await page.reload();
-  await expect(page.locator('.feature-totals')).toContainText('133.5 kcal');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+async function search(page,query){await page.getByLabel('Search foods',{exact:true}).fill(query);await expect(page.locator('.quick-food-row').first()).toBeVisible();return page.getByRole('region',{name:'Quick food logging',exact:true});}
+test('search finds new foods and dishes, then logs gram-based nutrition',async({page})=>{
+ await page.goto('/food');const region=await search(page,'bananas raw');const banana=region.locator('[data-food-id="usda-173944"]');await expect(banana).toContainText('Bananas, raw');expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await banana.getByRole('spinbutton').fill('150');await banana.getByRole('button',{name:'Add',exact:true}).click();const logs=await page.evaluate(()=>JSON.parse(localStorage.getItem('fittrack-workspace-v1')).logs);expect(logs[0].food.per100g.calories*logs[0].grams/100).toBe(133.5);await search(page,'biryani chicken');await expect(region.locator('.quick-food-results')).toContainText('Biryani with chicken');await page.reload();await expect(page.locator('.diary-meals')).toContainText('150 g');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
-
-test('pagination and repeated selection preserve edited saved food values', async ({ page }) => {
-  await page.goto('/food');
-  const region = await search(page, 'rice');
-  const firstId = await region.locator('[data-food-id]').first().getAttribute('data-food-id');
-  await region.getByRole('button', { name: 'Next results', exact: true }).click();
-  await expect(region.getByRole('status', { name: 'Food search status', exact: true })).toContainText('Showing 21–');
-  expect(await region.locator('[data-food-id]').first().getAttribute('data-food-id')).not.toBe(firstId);
-  await search(page, 'rice white long grain regular enriched cooked');
-  const rice = region.locator('[data-food-id="usda-168878"]');
-  await rice.getByRole('button', { name: 'Add and log food', exact: true }).click();
-  await page.getByRole('button', { name: 'Edit food', exact: true }).click();
-  const edit = page.getByRole('form', { name: 'Edit food', exact: true });
-  await edit.getByLabel('Energy (kcal) per 100 g', { exact: true }).fill('200');
-  await edit.getByRole('button', { name: 'Save food', exact: true }).click();
-  // Switch away in the entry form, then select the same search result again.
-  await page.getByLabel('Starter food', { exact: true }).selectOption('usda-171077');
-  await page.getByRole('button', { name: 'Add selected starter food', exact: true }).click();
-  const entry = page.getByRole('form', { name: 'Food entry', exact: true });
-  await entry.getByLabel('Food', { exact: true }).selectOption('usda-171077');
-  await search(page, 'rice white long grain regular enriched cooked');
-  await rice.getByRole('button', { name: 'Use saved food', exact: true }).click();
-  await expect(entry.getByLabel('Food', { exact: true })).toHaveValue('usda-168878');
-  await entry.getByLabel('Portion (g)', { exact: true }).fill('150');
-  await expect(page.getByRole('status', { name: 'Calculated portion nutrition', exact: true })).toContainText('300 kcal');
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fittrack-workspace-v1')).foods.length)).toBe(2);
+test('pagination and new logs preserve edited saved nutrition and old snapshots',async({page})=>{
+ await page.goto('/food');const region=await search(page,'rice');const first=await region.locator('[data-food-id]').first().getAttribute('data-food-id');await region.getByRole('button',{name:'Next results',exact:true}).click();await expect(region.locator('[data-food-id]').first()).not.toHaveAttribute('data-food-id',first);await search(page,'rice white long grain regular enriched cooked');const rice=region.locator('[data-food-id="usda-168878"]');await rice.getByRole('button',{name:'Add',exact:true}).click();await page.locator('.food-manager > summary').click();await page.getByRole('button',{name:'Edit food',exact:true}).click();const edit=page.getByRole('form',{name:'Edit food',exact:true});await edit.getByLabel('Energy (kcal) per 100 g',{exact:true}).fill('200');await edit.getByRole('button',{name:'Save food',exact:true}).click();await search(page,'rice white long grain regular enriched cooked');await rice.getByRole('spinbutton').fill('150');await expect(rice).toContainText('300 kcal');await rice.getByRole('button',{name:'Add',exact:true}).click();const state=await page.evaluate(()=>JSON.parse(localStorage.getItem('fittrack-workspace-v1')));expect(state.foods).toHaveLength(1);expect(state.logs[0].food.per100g.calories).toBe(130);expect(state.logs[1].food.per100g.calories).toBe(200);
 });
-
-test('failed search keeps saved-food tracking available and can be retried', async ({ page }) => {
-  await page.goto('/food');
-  await page.getByLabel('Starter food', { exact: true }).selectOption('usda-168878');
-  await page.getByRole('button', { name: 'Add selected starter food', exact: true }).click();
-  await page.route('**/api/foods/search?*', route => route.abort('internetdisconnected'));
-  const region = page.getByRole('region', { name: 'Food search', exact: true });
-  await region.getByLabel('Search foods', { exact: true }).fill('banana');
-  await region.getByRole('button', { name: 'Search foods', exact: true }).click();
-  await expect(region.getByRole('alert')).toContainText('saved foods are still available');
-  await expect(region.getByRole('button', { name: 'Search foods', exact: true })).toBeEnabled();
-  await page.getByRole('form', { name: 'Food entry', exact: true }).getByRole('button', { name: 'Log food', exact: true }).click();
-  await expect(page.locator('.feature-totals')).toContainText('130 kcal');
-  await page.unroute('**/api/foods/search?*');
-  await search(page, 'banana');
-  await expect(region.locator('[data-food-id]').first()).toBeVisible();
+test('failed catalogue search keeps recent-food logging available and can be retried',async({page})=>{
+ await page.goto('/food');const first=page.locator('.quick-food-row').first();await first.getByRole('button',{name:'Add',exact:true}).click();await page.route('**/api/foods/search?*',r=>r.abort('internetdisconnected'));await page.getByLabel('Search foods',{exact:true}).fill('banana');await expect(page.getByRole('main').getByRole('alert')).toContainText('Recent and saved foods still work offline');await page.getByLabel('Search foods',{exact:true}).fill('');await page.getByRole('button',{name:'Recent',exact:true}).click();await page.locator('.quick-food-row').first().getByRole('button',{name:'Add',exact:true}).click();await expect(page.locator('.diary-meals .diary-food-line')).toHaveCount(2);await page.unroute('**/api/foods/search?*');await search(page,'banana');await expect(page.locator('.quick-food-row').first()).toBeVisible();
 });
-
-test('food search API returns bounded results and rejects malformed requests', async ({ request }) => {
-  const response = await request.get('/api/foods/search?q=banana');
-  expect(response.status()).toBe(200);
-  const data = await response.json();
-  expect(data.catalogueSize).toBeGreaterThan(13000); expect(data.foods.length).toBeLessThanOrEqual(20);
-  for (const query of ['q=a', 'q=rice&page=0', 'q=rice&page=NaN', 'q=' + 'a'.repeat(101)]) expect((await request.get('/api/foods/search?' + query)).status()).toBe(400);
-  const missing = await request.get('/api/foods/search?q=zzzznonexistentfoodzzzz');
-  expect((await missing.json()).foods).toEqual([]);
+test('food search API returns bounded results and rejects malformed requests',async({request})=>{
+ const response=await request.get('/api/foods/search?q=banana');expect(response.status()).toBe(200);const data=await response.json();expect(data.catalogueSize).toBeGreaterThan(13000);expect(data.foods.length).toBeLessThanOrEqual(20);for(const query of ['q=a','q=rice&page=0','q=rice&page=NaN','q='+'a'.repeat(101)])expect((await request.get('/api/foods/search?'+query)).status()).toBe(400);expect((await(await request.get('/api/foods/search?q=zzzznonexistentfoodzzzz')).json()).foods).toEqual([]);
 });

@@ -1,8 +1,10 @@
 # Personal AI, appearance and flexible training
 
+Basic helper is available without a key; see [simple logging](simple-logging.md). It uses deterministic parsing and catalogue lookup, not a language model.
+
 ## Personal provider connections
 
-Use the connection panel in Settings or the assistant to add an OpenAI or Anthropic API key. Never put keys in chat. Saving does not validate a key with the provider and makes no provider request. Each chat submission requires sharing consent and confirmation that provider API charges may apply. Provider access, billing and usage limits remain the key owner's responsibility.
+Use the connection panel in Settings or the assistant to add an OpenAI or Anthropic API key. Never put keys in chat. Saving does not validate a key with the provider and makes no provider request. Each provider chat submission requires sharing consent and confirmation that provider API charges may apply. Provider access, billing and usage limits remain the key owner's responsibility.
 
 Keys are encrypted with AES-256-GCM on the server. The encrypted envelope is kept in a host-only HttpOnly, SameSite=Strict cookie (Secure in production); decrypted keys are never returned by the status endpoint. Each connection window has a maximum eight-hour expiry enforced on the server (adding or removing a provider does not extend it), is bound to its origin, and is invalidated by encryption-key rotation. It is a browser connection, not permanent account storage. Closing a normal browser session removes the session cookie, subject to browser session-restore behavior; the server expiry still applies. Remove each provider connection in the panel to disconnect. Successful account sign-out also clears the key cookie.
 

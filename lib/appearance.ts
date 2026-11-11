@@ -14,8 +14,10 @@ export function appearanceTokens(input: string, mode: string): Record<string, st
   const soft = dark ? blend(hex, '#1c1725', .17) : blend(hex, '#ffffff', .1);
   let primary = hex;
   for (let step = 0; step <= 100; step++) { primary = blend(hex, dark ? '#ffffff' : '#000000', 1 - step / 100); if ([card, background, soft].every(surface => contrast(primary, surface) >= 4.6)) break; }
+  const hue = (color: string) => { const [r,g,b] = rgb(color).map(v=>v/255); const high=Math.max(r,g,b),low=Math.min(r,g,b),d=high-low; return d===0?0:(high===r?(g-b)/d+(g<b?6:0):high===g?(b-r)/d+2:(r-g)/d+4)*60; };
   const rail = blend(hex, '#140d1e', .16); const hero = blend(hex, '#1b1028', .3);
   return {
+    '--logo-filter': `hue-rotate(${hue(hex)-hue('#7943c4')}deg) saturate(${Math.max(...rgb(hex))-Math.min(...rgb(hex))<12?0:1})`,
     '--accent-color': hex, '--background': background, '--foreground': dark ? '#f6f1fc' : '#292033', '--card': card,
     '--card-foreground': dark ? '#f6f1fc' : '#292033', '--muted-foreground': dark ? '#bfb2cc' : '#6b5f76',
     '--border': dark ? blend(hex, '#332b40', .15) : blend(hex, '#e6e2ec', .1), '--primary': primary,

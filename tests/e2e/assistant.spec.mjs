@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-test('assistant is honestly disabled; examples require review before saving', async ({ page }) => {
+test('basic assistant is ready without keys; examples require review before saving', async ({ page }) => {
   await page.goto('/assistant');
-  await expect(page.getByRole('button', { name: 'Send message', exact: true })).toBeDisabled();
-  await expect(page.getByText('Live AI is not enabled.', { exact: false })).toBeVisible();
+  await expect(page.getByLabel('Chat provider', { exact: true })).toHaveValue('basic');
+  await expect(page.getByText('Basic helper ready', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Try example (no AI call)' }).click();
   const draft = page.getByRole('region', { name: 'Review draft' });
   await expect(draft).toContainText('Example only');
@@ -15,7 +15,7 @@ test('assistant is honestly disabled; examples require review before saving', as
   await draft.getByLabel('Grams for banana raw', { exact: true }).fill('200');
   await draft.getByRole('button', { name: 'Save reviewed foods to diary' }).click();
   await expect(page.getByText('Reviewed foods saved to your diary.')).toBeVisible();
-  await page.goto('/food'); await expect(page.locator('.feature-totals')).toContainText('194 kcal');
+  await page.goto('/food'); await expect(page.locator('.day-toolbar')).toContainText('194 kcal');
 });
 test('workout suggestions replace a selected plan only after confirmation', async ({ page }) => {
   page.on('dialog', dialog => dialog.accept()); await page.goto('/assistant?mode=workout');
