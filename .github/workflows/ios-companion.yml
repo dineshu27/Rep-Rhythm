@@ -3,11 +3,13 @@ name: iPhone companion
 on:
   push:
     paths:
-      - 'ios/**'
+      - 'ios/FitAiCompanion/**'
+      - 'ios/scripts/**'
       - '.github/workflows/ios-companion.yml'
   pull_request:
     paths:
-      - 'ios/**'
+      - 'ios/FitAiCompanion/**'
+      - 'ios/scripts/**'
       - '.github/workflows/ios-companion.yml'
   workflow_dispatch:
 
