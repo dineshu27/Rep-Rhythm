@@ -1,0 +1,50 @@
+name: iPhone companion
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-companion.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-companion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iphone-companion-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Standard hosted runners are free for public repositories. Skip if visibility changes.
+    if: github.event.repository.private == false
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Show Apple toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Test native sync core
+        run: swift test --package-path ios/FitAiCompanion/SyncCore --scratch-path "$RUNNER_TEMP/fitai-sync-core"
+      - name: Verify generated Xcode project
+        run: |
+          python3 ios/scripts/generate_project.py
+          git diff --exit-code -- ios/FitAiCompanion/FitAiCompanion.xcodeproj
+      - name: Build iPhone application with the iOS SDK
+        run: >-
+          xcodebuild
+          -project ios/FitAiCompanion/FitAiCompanion.xcodeproj
+          -scheme FitAiCompanion
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath "$RUNNER_TEMP/fitai-ios"
+          CODE_SIGNING_ALLOWED=NO
+          build
