@@ -3,7 +3,7 @@ test('email fragment return becomes a server session and offers Watch setup', as
  let signedIn = false; let completed = 0;
  await page.route('**/api/auth', route => route.fulfill({ json: { configured: true, email: signedIn ? 'test@example.test' : null } }));
  await page.route('**/api/auth/complete', async route => { completed++; expect(new URL(page.url()).hash).toBe(''); expect(route.request().postDataJSON()).toEqual({ access_token: 'fake-access', refresh_token: 'fake-refresh' }); signedIn = true; await route.fulfill({ json: { signedIn: true } }); });
- await page.goto('/auth#access_token=fake-access&refresh_token=fake-refresh&type=magiclink');
+ await page.goto('/auth/callback#access_token=fake-access&refresh_token=fake-refresh&type=magiclink');
  await expect(page.getByRole('heading', { name: 'Signed in as test@example.test' })).toBeVisible();
  await expect(page.getByRole('link', { name: 'Connect Apple Watch & steps →' })).toBeVisible();
  expect(completed).toBe(1); expect(new URL(page.url()).hash).toBe('');
