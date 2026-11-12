@@ -18,7 +18,13 @@ export async function POST(request: Request) {
     if (body.action === 'signout') { const { error } = await client.auth.signOut(); if (error) throw error; const response = NextResponse.json({ signedOut: true }); response.cookies.set(personalCookie, '', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 0 }); return response; }
     const email = z.email().max(254).parse(body.email);
     const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: new URL('/auth/callback', request.url).toString() } });
-    if (error) return NextResponse.json({ error: 'The sign-in link could not be sent. Check your email and try again later.' }, { status: 429 });
+    if (error) {
+      const headers = { 'Cache-Control': 'no-store' };
+      if (error.code === 'over_email_send_rate_limit' || error.message.toLowerCase().includes('email rate limit')) return NextResponse.json({ error: 'The email provider has reached its sending limit. Please pause retries and allow up to an hour before requesting one new sign-in link. Your email address is not the problem.', code: 'email_send_limit' }, { status: 429, headers });
+      if (error.status === 429) return NextResponse.json({ error: 'Too many sign-in requests. Please wait a few minutes before trying once more.', code: 'request_limit' }, { status: 429, headers });
+      if (error.code === 'email_address_not_authorized') return NextResponse.json({ error: 'Sign-in email delivery is not configured for this address yet. The app owner needs to configure a dedicated email sender.', code: 'email_delivery_setup' }, { status: 503, headers });
+      return NextResponse.json({ error: 'The email service could not send a sign-in link. Please try again later.', code: 'email_delivery_failed' }, { status: 503, headers });
+    }
     return NextResponse.json({ sent: true });
   } catch { return NextResponse.json({ error: 'Check the email address and try again.' }, { status: 400 }); }
 }

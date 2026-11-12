@@ -1,5 +1,13 @@
-import { expect, it, vi } from 'vitest';
-vi.mock('@/lib/supabase/server',()=>({serverSupabase:async()=>({auth:{signOut:async()=>({error:null})}})}));
+import { beforeEach, expect, it, vi } from 'vitest';
+const signInWithOtp = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/supabase/server',()=>({serverSupabase:async()=>({auth:{signOut:async()=>({error:null}),signInWithOtp}})}));
+beforeEach(() => { signInWithOtp.mockReset(); });
 import { POST } from '../app/api/auth/route';
 import { personalCookie } from './personal-ai';
 it('successful cloud sign-out also clears the personal provider credential cookie',async()=>{const response=await POST(new Request('https://app.test/api/auth',{method:'POST',headers:{origin:'https://app.test'},body:JSON.stringify({action:'signout'})}));expect(response.status).toBe(200);expect(response.headers.get('set-cookie')).toContain(personalCookie+'=');expect(response.headers.get('set-cookie')).toContain('Max-Age=0');});
+
+function emailRequest() { return new Request('https://app.test/api/auth', { method: 'POST', headers: { origin: 'https://app.test' }, body: JSON.stringify({ email: 'test@example.test' }) }); }
+it('explains the project email limit instead of asking users to check their address', async () => { signInWithOtp.mockResolvedValue({ error: { code: 'over_email_send_rate_limit', status: 429, message: 'email rate limit exceeded' } }); const response = await POST(emailRequest()); expect(response.status).toBe(429); expect(response.headers.get('cache-control')).toBe('no-store'); expect(await response.json()).toMatchObject({ code: 'email_send_limit', error: expect.stringContaining('pause retries') }); });
+it('distinguishes request throttling from an hourly sending limit', async () => { signInWithOtp.mockResolvedValue({ error: { code: 'over_request_rate_limit', status: 429, message: 'Too many requests' } }); const response = await POST(emailRequest()); expect(response.status).toBe(429); expect(await response.json()).toMatchObject({ code: 'request_limit' }); });
+it('reports sender configuration restrictions without returning raw provider errors', async () => { signInWithOtp.mockResolvedValue({ error: { code: 'email_address_not_authorized', status: 400, message: 'private-provider-details' } }); const response = await POST(emailRequest()); expect(response.status).toBe(503); expect(await response.json()).toMatchObject({ code: 'email_delivery_setup' }); });
+it('reports provider failures as service errors rather than rate limits', async () => { signInWithOtp.mockResolvedValue({ error: { code: 'unexpected_failure', status: 500, message: 'private-provider-details' } }); const response = await POST(emailRequest()); expect(response.status).toBe(503); const body = await response.json(); expect(body.code).toBe('email_delivery_failed'); expect(JSON.stringify(body)).not.toContain('private-provider-details'); });
