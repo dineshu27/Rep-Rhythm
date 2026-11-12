@@ -1,0 +1,12 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+const auth = vi.hoisted(() => ({ getUser: vi.fn(), setSession: vi.fn(), signOut: vi.fn() }));
+vi.mock('@/lib/supabase/server', () => ({ serverSupabase: async () => ({ auth }) }));
+import { POST } from '../app/api/auth/complete/route';
+const tokens = { access_token: 'unit-access', refresh_token: 'unit-refresh' };
+function request(body: unknown = tokens, origin = 'https://app.test') { return new Request('https://app.test/api/auth/complete', { method: 'POST', headers: { origin }, body: JSON.stringify(body) }); }
+beforeEach(() => { vi.resetAllMocks(); auth.getUser.mockResolvedValue({ data: { user: { id: 'owner' } }, error: null }); auth.setSession.mockResolvedValue({ data: { user: { id: 'owner' }, session: {} }, error: null }); auth.signOut.mockResolvedValue({ error: null }); });
+it('validates the email return with Auth before persisting a matching session', async () => { const response = await POST(request()); expect(response.status).toBe(200); expect(auth.getUser).toHaveBeenCalledWith(tokens.access_token); expect(auth.setSession).toHaveBeenCalledWith(tokens); expect(auth.getUser.mock.invocationCallOrder[0]).toBeLessThan(auth.setSession.mock.invocationCallOrder[0]); expect(response.headers.get('cache-control')).toBe('no-store'); expect(await response.json()).toEqual({ signedIn: true }); });
+it('rejects cross-origin session injection before calling Auth', async () => { expect((await POST(request(tokens, 'https://attacker.test'))).status).toBe(403); expect(auth.getUser).not.toHaveBeenCalled(); expect(auth.setSession).not.toHaveBeenCalled(); });
+it('rejects expired or unverified tokens without storing them', async () => { auth.getUser.mockResolvedValue({ data: { user: null }, error: { message: 'expired' } }); expect((await POST(request())).status).toBe(401); expect(auth.setSession).not.toHaveBeenCalled(); });
+it('rejects malformed and oversized returns', async () => { expect((await POST(request({ access_token: 'a' }))).status).toBe(400); expect((await POST(request({ ...tokens, access_token: 'a'.repeat(17000) }))).status).toBe(400); expect(auth.getUser).not.toHaveBeenCalled(); });
+it('clears a session if token refresh returns a different account', async () => { auth.setSession.mockResolvedValue({ data: { user: { id: 'other' }, session: {} }, error: null }); expect((await POST(request())).status).toBe(401); expect(auth.signOut).toHaveBeenCalledWith({ scope: 'local' }); });
