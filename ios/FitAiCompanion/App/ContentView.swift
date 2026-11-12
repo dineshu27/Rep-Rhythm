@@ -41,9 +41,9 @@ struct ContentView:View {
                     GroupBox {
                         VStack(alignment:.leading,spacing:14) {
                             Label("3 · Sync permitted data",systemImage:"arrow.triangle.2.circlepath").font(.headline)
-                            Toggle("Automatically sync to my FitAi account",isOn:Binding(get:{model.automatic},set:{value in Task{await model.setAutomatic(value)}})).disabled(model.connection==nil|| !model.permissionRequested)
+                            Toggle("Automatically sync to my FitAi account",isOn:Binding(get:{model.automatic},set:{value in Task{await model.setAutomatic(value)}})).disabled(model.connection==nil || !model.permissionRequested)
                             Text("Enabling uploads daily step totals and workout type, start/end time, duration and source for today and the previous 30 days. Your private data is not sent to AI by this companion.").font(.caption).foregroundStyle(.secondary)
-                            Button("Sync now"){Task{await model.sync()}}.buttonStyle(.borderedProminent).disabled(model.busy|| !model.automatic)
+                            Button("Sync now"){Task{await model.sync()}}.buttonStyle(.borderedProminent).disabled(model.busy || !model.automatic)
                             if model.busy {ProgressView("Syncing…")}
                             if let synced=model.lastSync,let date=SyncDates.date(synced) {Text("Last received: \(date.formatted(date:.abbreviated,time:.shortened))").font(.caption)}
                             Text("Steps may refresh hourly in the background. iOS controls delivery; updates can wait while the phone is locked, offline or force-quit. Opening FitAi retries pending changes.").font(.caption).foregroundStyle(.secondary)
