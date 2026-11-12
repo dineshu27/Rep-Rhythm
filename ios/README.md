@@ -4,7 +4,9 @@ Native SwiftUI iPhone app (iOS 17+) with read-only Apple Health access. It reads
 
 ## Current build status
 
-The Mac currently has Command Line Tools and Swift 6.4, but **no full Xcode or iOS SDK**. The Foundation-based sync core compiles and its standalone checks run here. Native Swift syntax, Xcode project and property lists are validated, but the SwiftUI/HealthKit application has **not been built against the iOS SDK or exercised on an iPhone**. Background HealthKit delivery must be tested on real hardware; the simulator does not validate it. XCTest also needs full Xcode on this Mac. Do not describe the companion as installed or live until these checks pass.
+The Mac currently has Command Line Tools and Swift 6.4, but **no local full Xcode or iOS SDK**. The companion has now passed a **real iOS Simulator SDK build and 8 native XCTest tests** on GitHub’s standard macOS runner: [successful native verification](https://github.com/dineshu27/Rep-Rhythm/actions/runs/43199136138). The generated Xcode project check also passed. The public-repository workflow uses read-only permissions, no secrets, no paid/larger runners and no artifact uploads; it skips if the repository becomes private.
+
+This verifies compilation and native sync-core tests. It is **not a signed device build or proof of live Apple Watch sync**. Signing, iPhone installation, HealthKit permission behavior and real background delivery still require a device test. The Foundation-based standalone checks also compile and run locally. Local XCTest needs full Xcode on this Mac; the simulator cannot validate HealthKit background delivery.
 
 ```sh
 python3 ios/scripts/generate_project.py

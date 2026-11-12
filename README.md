@@ -8,7 +8,7 @@ A Next.js fitness workspace for profile preferences, food and meal planning, wor
 - **Workouts:** select exercises and start without creating a routine, or record completed sets in one form. Previous set values are shown for review; routines and weekly splits are still available.
 - **Chat:** describe food in grams, completed sets and daily steps in one conversation. Clear reports save automatically with editable receipts and Undo; missing details require clarification or review. Basic logging needs no key; connected personal models require sharing and billing consent. Planning tools remain under Planning & coaching.
 - **Home:** personalised greeting, recorded nutrition and seven-day visuals, optional city/current-area weather, and quick daily actions.
-- **Watch & steps:** daily CSV import plus a native iPhone HealthKit companion and private account pairing/sync endpoints. Received Apple Health totals appear on Home, Progress and separate workout history. Activation requires the new dedicated backend and a signed iPhone build; Google sync is not configured.
+- **Watch & steps:** daily CSV import plus a native iPhone HealthKit companion and private account pairing/sync endpoints. Received Apple Health totals appear on Home, Progress and separate workout history. The dedicated backend is active and the native SDK build is verified; signed iPhone installation and real-device sync testing remain. Google sync is not configured.
 - **Appearance:** the selected colour also updates the app logo, favicon and install manifest. Installed mobile icon refresh timing depends on the browser/OS.
 
 See [workflow details and limits](docs/simple-logging.md) and [chat, weather and watch setup](docs/daily-companion.md).
