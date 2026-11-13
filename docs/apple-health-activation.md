@@ -28,7 +28,9 @@ Resend's **Free** transactional plan is active (3,000 emails/month, 100/day); pa
 
 A dedicated Resend credential named **FitAi Supabase Auth** has Sending access limited to `auth.aifittraining.uk`. The user pasted it directly into the new FitAi project's SMTP Password field; it is not recorded in source or chat. The saved settings are sender **FitAi <no-reply@auth.aifittraining.uk>**, host `smtp.resend.com`, port `465`, username `resend`. Supabase confirmed the save and, after reload, custom SMTP is enabled and the stored password is hidden. Supabase's organization-wide Resend OAuth authorization was declined; this setup changes only the dedicated FitAi project's SMTP configuration.
 
-The next user-requested email delivery and successful iPhone browser sign-in still need verification. No test email was sent by the agent and no email-link token was requested in chat.
+Resend confirmed the user's next sign-in email as **Delivered**. The legacy magic-link flow still failed to establish a usable browser session, so sign-in now requests and verifies an emailed one-time code directly on the FitAi page. Both the hosted Magic link/OTP and Confirm sign up templates use the code-only body in `supabase/templates/email-code.html`, subject **Your FitAi sign-in code**. Verification uses Supabase `verifyOtp` with type `email`, preserves email-ownership checks and provider throttling, and returns no session tokens in JSON. Codes are kept in component memory only, cleared after an attempt and never placed in URLs or browser storage. A 60-second resend cooldown follows a successful send. Legacy callback handling remains available for older emails.
+
+Successful real-device code verification and Health pairing still need user confirmation. No test email was sent by the agent and no email-link token or sign-in code was requested in chat.
 
 ## iPhone installation and remaining device verification
 
