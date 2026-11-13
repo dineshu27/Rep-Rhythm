@@ -4,9 +4,11 @@ Native SwiftUI iPhone app (iOS 17+) with read-only Apple Health access. It reads
 
 ## Current build status
 
-The Mac currently has Command Line Tools and Swift 6.4, but **no local full Xcode or iOS SDK**. The companion has now passed a **real iOS Simulator SDK build and 8 native XCTest tests** on GitHub’s standard macOS runner: [successful native verification](https://github.com/dineshu27/Rep-Rhythm/actions/runs/43199136138). The generated Xcode project check also passed. The public-repository workflow uses read-only permissions, no secrets, no paid/larger runners and no artifact uploads; it skips if the repository becomes private.
+Full Xcode is installed on this Mac. The companion passed a local **physical-iPhone SDK build, development signing and signature verification**, and was installed on the user's iPhone 14 Pro Max. The user confirmed the app opens after enabling Developer Mode and trusting their profile. The current Personal Team development profile expires **19 November 2026** and will need renewal. Signing configuration remains local; no private key or certificate is committed.
 
-This verifies compilation and native sync-core tests. It is **not a signed device build or proof of live Apple Watch sync**. Signing, iPhone installation, HealthKit permission behavior and real background delivery still require a device test. The Foundation-based standalone checks also compile and run locally. Local XCTest needs full Xcode on this Mac; the simulator cannot validate HealthKit background delivery.
+The companion also passed a **real iOS Simulator SDK build and 8 native XCTest tests** on GitHub's standard macOS runner: [successful native verification](https://github.com/dineshu27/Rep-Rhythm/actions/runs/43199136138). The generated Xcode project check passed. The workflow uses read-only permissions, no secrets, no paid/larger runners and no artifact uploads; it skips if the repository becomes private.
+
+Live HealthKit permission behavior, account pairing, Apple Watch upload and background delivery still require the real-device checks below. The companion is not a TestFlight/App Store release. See [the activation record](../docs/apple-health-activation.md) for backend and authentication-email setup status.
 
 ```sh
 python3 ios/scripts/generate_project.py

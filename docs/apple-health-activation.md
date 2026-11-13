@@ -20,8 +20,20 @@ The owner-only Health pairing/load/revoke functions and the existing fresh-sign-
 
 The four Health tables trigger [RLS enabled/no policy informational notices](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy). They deliberately have no direct table grants and no direct row-access policies: the default is deny-all, with narrow credential/owner-checked RPCs as the only access path. These are reviewed intentional notices, not a claim that the advisor returns no findings.
 
-## Remaining iPhone gate
+## Email delivery activation — 13 November 2026
 
-Full Xcode and its iOS SDK are not installed locally. The native target now passes a real unsigned iOS Simulator SDK build, its generated-project check and 8 XCTest tests on [the free standard GitHub macOS runner](https://github.com/dineshu27/Rep-Rhythm/actions/runs/43199136138). The workflow uses read-only permissions, no secrets or artifact uploads, and skips if the repository becomes private. Standard hosted runners are [free for public repositories](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+The built-in Supabase email service returned `email rate limit exceeded` during sign-in. The app now explains email sending limits separately from other delivery errors. The email-return bridge supports implicit session fragments as well as the existing PKCE callback, validates the returned access token with Auth before persisting the session, removes tokens from browser history and displays callback failures.
 
-The app is not yet signed, installed or tested with real Apple Watch data. Background HealthKit delivery cannot be verified in the simulator. Follow [the iPhone installation and device checklist](../ios/README.md). Developer Program membership is needed for TestFlight/App Store distribution; no enrolment or charge was made. The next step is Xcode signing and installation on the user’s iPhone, then permission and real-sync verification.
+Resend's **Free** transactional plan is active (3,000 emails/month, 100/day); paid transactional overages are off. The dedicated sending domain `auth.aifittraining.uk` is **Verified / Ready**. Three explicitly approved Cloudflare records were added: the generated public DKIM key at `resend._domainkey.auth`, DNS-only CNAME `rsend.auth` to `rsend-euw1.forge.rmta.net`, and DNS-only CNAME `send.auth` to `send.forge.rmta.net`, all with Auto TTL. The existing `app` A record remains `76.76.21.21`; no nameservers, root-domain policy or receiving-mail records were changed.
+
+A dedicated Resend credential named **FitAi Supabase Auth** has Sending access limited to `auth.aifittraining.uk`. The user pasted it directly into the new FitAi project's SMTP Password field; it is not recorded in source or chat. The saved settings are sender **FitAi <no-reply@auth.aifittraining.uk>**, host `smtp.resend.com`, port `465`, username `resend`. Supabase confirmed the save and, after reload, custom SMTP is enabled and the stored password is hidden. Supabase's organization-wide Resend OAuth authorization was declined; this setup changes only the dedicated FitAi project's SMTP configuration.
+
+The next user-requested email delivery and successful iPhone browser sign-in still need verification. No test email was sent by the agent and no email-link token was requested in chat.
+
+## iPhone installation and remaining device verification
+
+Full Xcode is now installed locally. The companion compiled against the local physical-iPhone SDK, was signed with an Apple-managed Personal Team development profile containing HealthKit and background-delivery entitlements, and passed signature verification. The profile expires **19 November 2026** and requires rebuilding/renewal after expiry.
+
+Installation on the user's connected iPhone 14 Pro Max succeeded. The user enabled Developer Mode, trusted their development profile and confirmed that the companion opens. Its private Apple Health permissions, pairing, first live upload and OS-controlled background delivery remain unverified; do not claim live Watch sync until those device checks pass.
+
+The native target also passed the unsigned iOS Simulator SDK build, generated-project check and 8 XCTest tests on [the free standard GitHub macOS runner](https://github.com/dineshu27/Rep-Rhythm/actions/runs/43199136138). Follow [the iPhone setup and device checklist](../ios/README.md). Developer Program membership is needed for TestFlight/App Store distribution; no enrolment or charge was made. Local Xcode signing settings remain local rather than committing the user's team configuration.
