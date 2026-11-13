@@ -10,13 +10,19 @@ import { restoreCompleteBackup } from '@/lib/backup';
 export function Account() {
   const [auth, setAuth] = useState<{ configured: boolean; email: string | null } | null>(null);
   const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [resendAt, setResendAt] = useState(0);
+  const [clock, setClock] = useState(0);
+  const [showCode, setShowCode] = useState(false);
   const [account, setAccount] = useState<{ revision: number; backup: unknown } | null>(null);
   const { data: workspace } = useWorkspace(); const { data: workouts } = useWorkouts();
   useEffect(() => {
     let live = true;
     let error = new URLSearchParams(window.location.search).get('error');
     async function refresh() {
-      try { const response = await fetch('/api/auth', { cache: 'no-store' }); if (!response.ok) throw Error(); const data = await response.json(); if (live) { setAuth(data); if (data.email) setNotice('Signed in. You can now connect your iPhone.'); else if (error) { setNotice(error === 'network' ? 'Sign-in could not finish because of a connection problem. Request a new link when you are online.' : 'This sign-in link could not be completed. It may have expired, been used already, or opened in a different browser. Request a new link below and open it once in this browser.'); error = null; } } }
+      try { const response = await fetch('/api/auth', { cache: 'no-store' }); if (!response.ok) throw Error(); const data = await response.json(); if (live) { setAuth(data); if (data.email) setNotice('Signed in. You can now connect your iPhone.'); else if (error) { setNotice(error === 'network' ? 'Sign-in could not finish because of a connection problem. Request a sign-in code when you are online.' : 'This sign-in link could not be completed. It may have expired, been used already, or opened in a different browser. Request a sign-in code below and enter it here instead.'); error = null; } } }
       catch { if (live) setNotice('Account status could not be loaded. Try reloading.'); }
     }
     void refresh();
@@ -29,11 +35,40 @@ export function Account() {
     const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'Request failed.'); return data;
   }
   async function run(task: () => Promise<void>) { setBusy(true); setNotice(''); try { await task(); } catch (error) { setNotice(error instanceof Error ? error.message : 'Request failed.'); } finally { setBusy(false); } }
-  function signIn(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const email = new FormData(event.currentTarget).get('email'); void run(async () => { await request('/api/auth', { method: 'POST', body: JSON.stringify({ email }) }); setNotice('Check your email for a sign-in link. Use the newest link once, in this browser, to finish signing in.'); }); }
+  useEffect(() => {
+    if (!resendAt) return;
+    const timer = setInterval(() => { const now = Date.now(); setClock(now); if (now >= resendAt) clearInterval(timer); }, 1000);
+    return () => clearInterval(timer);
+  }, [resendAt]);
+  const cooldown = Math.max(0, Math.ceil((resendAt - clock) / 1000));
+  function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (cooldown > 0) return;
+    void run(async () => {
+      await request('/api/auth', { method: 'POST', body: JSON.stringify({ email }) });
+      setCodeSent(true); setShowCode(true); setCode(''); const now = Date.now(); setClock(now); setResendAt(now + 60_000);
+      setNotice('Code sent. Enter the code from the newest FitAi email below. Keep this page open; no email link is needed.');
+    });
+  }
+  function verifyCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = code; setCode('');
+    void run(async () => {
+      const data = await request('/api/auth', { method: 'POST', body: JSON.stringify({ action: 'verify', email, code: value }) });
+      setAuth({ configured: true, email: data.email }); setCodeSent(false); setShowCode(false);
+      setNotice('Signed in. You can now connect your iPhone.');
+      window.history.replaceState(null, '', '/auth');
+    });
+  }
   return <div className="feature-page feature-auth" data-page="auth"><div className="shell-page-heading"><span className="shell-overline">YOUR PERSONAL WORKSPACE</span><h1>A home for your healthy habits.</h1><p>Connect your account when cloud storage is configured.</p></div><PageSignature kind="auth"/><section className="workout-panel"><h2>{auth?.email ? `Signed in as ${auth.email}` : auth?.configured ? 'Sign in with email' : 'Browser tracking is ready'}</h2>
     {!auth && <p className="workout-muted">Checking account configuration…</p>}
     {auth && !auth.configured && <><p className="workout-muted">Cloud sign-in is awaiting the intended Supabase project and its public configuration. Your profile, food, meals, workouts, and progress work in this browser now.</p><Link className="shell-button" href="/onboarding">Set up browser tracking</Link></>}
-    {auth?.configured && !auth.email && <form onSubmit={signIn} className="workout-form"><label>Email address<input type="email" name="email" autoComplete="email" maxLength={254} required/></label><button className="shell-button" type="submit" disabled={busy}>Email a sign-in link</button></form>}
+    {auth?.configured && !auth.email && <>
+      <p className="workout-muted">Get a one-time code from FitAi, then enter it here. No password or email link needed.</p>
+      <form onSubmit={signIn} className="workout-form"><label>Email address<input type="email" name="email" autoComplete="email" maxLength={254} required value={email} onChange={event => { setEmail(event.target.value); setCode(''); setCodeSent(false); }}/></label><button className="shell-button" type="submit" disabled={busy || cooldown > 0}>{cooldown > 0 ? `Send again in ${cooldown}s` : codeSent ? 'Send a new code' : 'Email me a sign-in code'}</button></form>
+      {!showCode && <button className="shell-text-link" type="button" onClick={() => setShowCode(true)}>I already have a code</button>}
+      {showCode && <form onSubmit={verifyCode} className="workout-form" aria-label="Verify email code"><label>Sign-in code<input name="code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" minLength={6} maxLength={10} required value={code} onChange={event => setCode(event.target.value.replace(/\D/g, ''))} aria-describedby="code-help"/></label><p id="code-help" className="workout-muted">Use the newest code for the email address above. Never share your code in chat.</p><button className="shell-button" type="submit" disabled={busy || !email || code.length < 6}>{busy ? 'Checking…' : 'Verify code & sign in'}</button></form>}
+    </>}
     {auth?.email && <><Link className="shell-button" href="/connections">Connect Apple Watch &amp; steps →</Link><p className="workout-muted">Signing in does not upload or replace browser records. Cloud saves are manual. Review and export before replacing data on either side.</p><div className="workout-actions"><button className="shell-button" disabled={busy} onClick={() => void run(async () => { const data = await request('/api/account'); setAccount(data); setNotice(data.backup ? `Account records found. Revision ${data.revision}.` : 'Your account has no saved records yet.'); })}>Check account storage</button><button className="shell-button shell-button-secondary" disabled={busy} onClick={() => void run(async () => { await request('/api/auth', { method: 'POST', body: JSON.stringify({ action: 'signout' }) }); clearHealthData(); setAuth({ configured: true, email: null }); setAccount(null); setNotice('Signed out. Browser records remain on this device.'); })}>Sign out</button></div>
     {account && <div className="workout-actions"><button className="shell-button" disabled={busy || !workspace || !workouts} onClick={() => { if (confirm('Replace your account records with all fitness data in this browser? Other devices will load this version on their next manual load.')) void run(async () => { const data = await request('/api/account', { method: 'PUT', body: JSON.stringify({ revision: account.revision, backup: { version: 1, workspace, workouts } }) }); setAccount({ revision: data.revision, backup: { version: 1, workspace, workouts } }); setNotice('Account records saved.'); }); }}>Save browser data to account</button><button className="shell-button shell-button-secondary" disabled={busy || !account.backup} onClick={() => { if (confirm('Replace all fitness data in this browser with the account records? Export a local backup first.')) void run(async () => { const latest = await request('/api/account'); if (!latest.backup) throw new Error('The account has no saved records.'); restoreCompleteBackup(latest.backup); setAccount(latest); setNotice('Account records loaded to this browser.'); }); }}>Load account data to browser</button><button className="shell-button shell-button-secondary" disabled={busy || !account.backup} onClick={() => void run(async () => { const latest = await request('/api/account'); if (!latest.backup) throw new Error('No account records to export.'); downloadJSON(latest.backup, 'fittrack-account'); })}>Export account records</button></div>}
     <p className="shell-fine-print">Sign-out leaves browser data in place. Use Settings to clear it on a shared device.</p><details><summary>Delete account</summary><form className="workout-form" onSubmit={event => { event.preventDefault(); const confirmation = new FormData(event.currentTarget).get('confirmation'); if (confirmation === 'DELETE ACCOUNT' && confirm('Permanently delete this account and its cloud records? Export first. Browser data will remain until you clear it in Settings.')) void run(async () => { await request('/api/account', { method: 'DELETE', body: JSON.stringify({ confirmation }) }); clearHealthData(); setAuth({ configured: true, email: null }); setAccount(null); setNotice('Account deleted.'); }); }}><label>Type DELETE ACCOUNT<input name="confirmation" required pattern="DELETE ACCOUNT" autoComplete="off"/></label><p className="workout-muted">Requires a fresh email sign-in within five minutes. This permanently removes your account and its cloud records.</p><button disabled={busy} className="shell-button shell-button-secondary" type="submit">Permanently delete account</button></form></details></>}
