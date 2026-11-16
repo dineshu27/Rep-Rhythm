@@ -45,3 +45,9 @@ The native target also passed the unsigned iOS Simulator SDK build, generated-pr
 A desktop/mobile regression test reproduced a stale dashboard after code sign-in: the shared layout had fetched Health data while signed out, and the periodic refresh depended on a local flag absent in a fresh browser. Successful code verification now immediately refreshes Health data. Returning to the visible browser also refreshes without requiring an earlier local pairing flag; periodic polling remains limited to enabled sync browsers.
 
 Home shows an Apple Health connection panel with the last server receipt, available import counts, a refresh button and a link to imported workouts. Connection errors and timezone mismatches are visible. Manual fitness records and their totals stay separate from imported workouts. A populated PostgreSQL snapshot is also tested against the website schema.
+
+### Auth/Health disagreement follow-up (16 November 2026)
+
+The owner reported an email on `/api/auth` while `/api/health` returned the account guard's sign-in error. Native uploads continued to succeed. The owner session has not yet been reproduced in the diagnostic browser, so the underlying session mismatch remains unconfirmed.
+
+Both GET endpoints now use the same verified account guard. Auth failures distinguish missing/invalid sessions from provider/network throttling or outages; server diagnostics contain only a fixed category and HTTP status, never credentials, email addresses or health records. Home exposes failed Health access and offers sign-in/retry instead of hiding the connection panel. These changes improve consistency and recovery, but must not be reported as proof that the owner's existing iPhone session has recovered. No pairing credentials or stored Health records were changed.

@@ -25,3 +25,15 @@ test('returning to a signed-in page discovers paired data without a prior local 
  const previous = requests; await status.getByRole('button', { name: 'Refresh Watch data' }).click();
  await expect.poll(() => requests).toBeGreaterThan(previous);
 });
+
+test('Home exposes a failed Health session and recovers without pairing again', async ({ page }) => {
+ let recovered = false;
+ await page.route('**/api/health', route => recovered ? route.fulfill({ json: snapshot() }) : route.fulfill({ status: 401, json: { error: 'Sign in to access your account.', code: 'session_missing' } }));
+ await page.goto('/');
+ const panel = page.getByRole('region', { name: 'Apple Health sync status' });
+ await expect(panel.getByRole('alert')).toContainText('Sign in to access your account.');
+ await expect(panel.getByRole('link', { name: 'Sign in to load Watch data' })).toHaveAttribute('href', '/auth');
+ recovered = true; await panel.getByRole('button', { name: 'Retry Watch data' }).click();
+ await expect(page.locator('.home-kpis')).toContainText('6,500');
+ await expect(panel).toContainText('Apple Health connected');
+});

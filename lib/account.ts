@@ -12,7 +12,15 @@ export async function accountClient() {
   const client = await serverSupabase();
   if (!client) return { client: null, user: null, response: NextResponse.json({ error: 'Cloud configuration is not available. Browser tracking still works.' }, { status: 503 }) };
   const { data, error } = await client.auth.getUser();
-  if (error || !data.user) return { client: null, user: null, response: NextResponse.json({ error: 'Sign in to access your account.' }, { status: 401 }) };
+  if (error || !data.user) {
+    // Never log cookies, tokens, email addresses or provider error messages.
+    const unavailable = !!error && (error.status === 429 || !error.status || error.status >= 500 || error.name === 'AuthRetryableFetchError');
+    const code = unavailable ? 'auth_unavailable' : error?.name === 'AuthSessionMissingError' ? 'session_missing' : 'session_invalid';
+    console.warn('fitai_account_auth', { code, status: error?.status ?? null });
+    return { client: null, user: null, response: NextResponse.json({
+      error: unavailable ? 'Sign-in could not be checked right now. Please retry shortly.' : 'Sign in to access your account.', code,
+    }, { status: unavailable ? 503 : 401, headers: { 'Cache-Control': 'private, no-store' } }) };
+  }
   return { client, user: data.user, response: null };
 }
 export async function boundedJSON(request: Request, maximum = 5_000_000) {

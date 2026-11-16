@@ -2,13 +2,18 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { serverSupabase } from '@/lib/supabase/server';
 import { personalCookie } from '@/lib/personal-ai';
-import { boundedJSON, sameOrigin } from '@/lib/account';
+import { accountClient, boundedJSON, sameOrigin } from '@/lib/account';
 export const dynamic = 'force-dynamic';
 export async function GET() {
-  const client = await serverSupabase();
-  if (!client) return NextResponse.json({ configured: false, email: null }, { headers: { 'Cache-Control': 'no-store' } });
-  const { data } = await client.auth.getUser();
-  return NextResponse.json({ configured: true, email: data.user?.email ?? null }, { headers: { 'Cache-Control': 'no-store' } });
+  const { client, user, response } = await accountClient();
+  const headers = { 'Cache-Control': 'private, no-store' };
+  if (response) {
+    const failure = await response.json();
+    if (response.status === 401) return NextResponse.json({ configured: true, email: null, code: failure.code }, { headers });
+    if (!client && !failure.code) return NextResponse.json({ configured: false, email: null }, { headers });
+    return NextResponse.json({ configured: true, email: null, ...failure }, { status: response.status, headers });
+  }
+  return NextResponse.json({ configured: true, email: user.email ?? null }, { headers });
 }
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Invalid request origin.' }, { status: 403 });
