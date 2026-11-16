@@ -2,6 +2,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
 import {beforeAll,beforeEach,afterAll,expect,it} from 'vitest';
 import {secretHash} from './health-server';
+import {healthSnapshotSchema} from './health';
 const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',workoutId='33333333-3333-4333-8333-333333333333';let db:PGlite;
 const hash=(value:string)=>secretHash(value);const raw=(value:string)=>Buffer.from(hash(value),'hex').toString('base64url');
 async function role(user:string|null){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user??'']);await db.exec(user?'set role authenticated':'set role anon');}
@@ -19,3 +20,5 @@ it('expires codes and refuses stale, future, duplicate and wrong-timezone batche
 it('disconnects without losing imports, then allows owner-only removal of that device’s imported records',async()=>{const device=await pair();await ingest(batch());await db.query('select public.fitai_health_disconnect($1)',[raw('token-a')]);await expect(ingest(batch())).rejects.toThrow();expect((await load()).workouts).toHaveLength(1);await db.query('select public.fitai_health_revoke($1,true)',[device.deviceId]);expect((await load()).steps).toEqual([]);});
 
 it('stored hashes cannot be replayed as device or pairing credentials',async()=>{await pair();await role(null);await expect(db.query('select public.fitai_health_ingest($1,$2::jsonb)',[hash(raw('token-a')),JSON.stringify(batch())])).rejects.toThrow();await expect(db.query('select public.fitai_health_redeem($1,$2,$3)',[hash(raw('pair-a')),raw('other'),'Phone'])).rejects.toThrow();});
+
+it('returns a populated PostgreSQL snapshot accepted by the website schema', async () => { await pair(); await ingest(batch()); const snapshot = await load(); const parsed = healthSnapshotSchema.safeParse(snapshot); expect(parsed.error?.issues).toBeUndefined(); expect(parsed.success).toBe(true); });

@@ -30,12 +30,18 @@ A dedicated Resend credential named **FitAi Supabase Auth** has Sending access l
 
 Resend confirmed the user's next sign-in email as **Delivered**. The legacy magic-link flow still failed to establish a usable browser session, so sign-in now requests and verifies an emailed one-time code directly on the FitAi page. Both the hosted Magic link/OTP and Confirm sign up templates use the code-only body in `supabase/templates/email-code.html`, subject **Your FitAi sign-in code**. Verification uses Supabase `verifyOtp` with type `email`, preserves email-ownership checks and provider throttling, and returns no session tokens in JSON. Codes are kept in component memory only, cleared after an attempt and never placed in URLs or browser storage. A 60-second resend cooldown follows a successful send. Legacy callback handling remains available for older emails.
 
-Successful real-device code verification and Health pairing still need user confirmation. No test email was sent by the agent and no email-link token or sign-in code was requested in chat.
+The user confirmed successful real-device code sign-in, paired the installed companion and ran Sync now. The server acknowledged the foreground upload and stored imported steps and workouts. No test email was sent by the agent and no email-link token or sign-in code was requested in chat.
 
 ## iPhone installation and remaining device verification
 
 Full Xcode is now installed locally. The companion compiled against the local physical-iPhone SDK, was signed with an Apple-managed Personal Team development profile containing HealthKit and background-delivery entitlements, and passed signature verification. The profile expires **19 November 2026** and requires rebuilding/renewal after expiry.
 
-Installation on the user's connected iPhone 14 Pro Max succeeded. The user enabled Developer Mode, trusted their development profile and confirmed that the companion opens. Its private Apple Health permissions, pairing, first live upload and OS-controlled background delivery remain unverified; do not claim live Watch sync until those device checks pass.
+Installation on the user's connected iPhone 14 Pro Max succeeded. The user enabled Developer Mode, trusted their development profile and confirmed that the companion opens. The user completed read permissions and pairing, and a real foreground upload was acknowledged and verified on the server. OS-controlled background delivery is still unverified; do not treat a successful foreground upload as proof of background scheduling.
 
 The native target also passed the unsigned iOS Simulator SDK build, generated-project check and 8 XCTest tests on [the free standard GitHub macOS runner](https://github.com/dineshu27/Rep-Rhythm/actions/runs/43199136138). Follow [the iPhone setup and device checklist](../ios/README.md). Developer Program membership is needed for TestFlight/App Store distribution; no enrolment or charge was made. Local Xcode signing settings remain local rather than committing the user's team configuration.
+
+## Website Health refresh correction — 16 November 2026
+
+A desktop/mobile regression test reproduced a stale dashboard after code sign-in: the shared layout had fetched Health data while signed out, and the periodic refresh depended on a local flag absent in a fresh browser. Successful code verification now immediately refreshes Health data. Returning to the visible browser also refreshes without requiring an earlier local pairing flag; periodic polling remains limited to enabled sync browsers.
+
+Home shows an Apple Health connection panel with the last server receipt, available import counts, a refresh button and a link to imported workouts. Connection errors and timezone mismatches are visible. Manual fitness records and their totals stay separate from imported workouts. A populated PostgreSQL snapshot is also tested against the website schema.

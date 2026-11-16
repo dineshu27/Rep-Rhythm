@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { clearHealthData } from '@/lib/health-store';
+import { clearHealthData, refreshHealth } from '@/lib/health-store';
 import { PageSignature } from './page-signature';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useWorkspace, downloadJSON } from '@/lib/workspace-store';
@@ -57,6 +57,7 @@ export function Account() {
       const data = await request('/api/auth', { method: 'POST', body: JSON.stringify({ action: 'verify', email, code: value }) });
       setAuth({ configured: true, email: data.email }); setCodeSent(false); setShowCode(false);
       setNotice('Signed in. You can now connect your iPhone.');
+      void refreshHealth();
       window.history.replaceState(null, '', '/auth');
     });
   }

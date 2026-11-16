@@ -11,3 +11,17 @@ test('received Apple Health totals appear automatically without creating manual 
  await page.route('**/api/health',route=>route.fulfill({json:snapshot()}));await page.goto('/');await expect(page.locator('.home-kpis')).toContainText('6,500');await expect(page.locator('.home-kpis')).toContainText('Apple Health');await page.goto('/workouts');const imported=page.getByRole('region',{name:'Apple Health workout history'});await expect(imported).toContainText('Running');await expect(imported).toContainText('28 min');await page.goto('/progress');await page.getByLabel('Summary end date').fill('2026-11-11');await expect(page.locator('.health-day')).toContainText('6,500 steps');await expect(page.locator('.feature-stat').filter({hasText:'Steps in seven days'})).toContainText('6,500');const data=await page.evaluate(()=>({workspace:JSON.parse(localStorage.getItem('fittrack-workspace-v1')||'null'),workouts:JSON.parse(localStorage.getItem('fittrack-workouts-v1')||'null')}));expect(data.workspace?.metrics??[]).toEqual([]);expect(data.workouts?.history??[]).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
 });
 test('expired account access clears imported health data on refresh',async({page})=>{let signedIn=true;await page.addInitScript(()=>localStorage.setItem('fitai-health-auto','true'));await page.route('**/api/health',route=>signedIn?route.fulfill({json:snapshot()}):route.fulfill({status:401,json:{error:'Sign in'}}));await page.goto('/');await expect(page.locator('.home-kpis')).toContainText('6,500');signedIn=false;await page.evaluate(()=>window.dispatchEvent(new Event('fitai-health-refresh')));await expect(page.locator('.home-kpis')).not.toContainText('6,500');});
+
+test('returning to a signed-in page discovers paired data without a prior local opt-in flag', async ({ page }) => {
+ let signedIn = false; let requests = 0;
+ await page.route('**/api/health', route => { requests++; return signedIn ? route.fulfill({ json: snapshot() }) : route.fulfill({ status: 401, json: { error: 'Sign in' } }); });
+ await page.goto('/'); await expect.poll(() => requests).toBeGreaterThan(0);
+ expect(await page.evaluate(() => localStorage.getItem('fitai-health-auto'))).toBeNull();
+ signedIn = true; await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+ await expect(page.locator('.home-kpis')).toContainText('6,500');
+ const status = page.getByRole('region', { name: 'Apple Health sync status' });
+ await expect(status).toContainText('Last received');
+ await expect(status.getByRole('link', { name: 'View Apple Health workouts →' })).toHaveAttribute('href', '/workouts#apple-health-workouts');
+ const previous = requests; await status.getByRole('button', { name: 'Refresh Watch data' }).click();
+ await expect.poll(() => requests).toBeGreaterThan(previous);
+});

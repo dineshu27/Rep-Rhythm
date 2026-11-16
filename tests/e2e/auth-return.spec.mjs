@@ -60,3 +60,26 @@ test('an expired code can be corrected without requesting another email', async 
  await expect(page.getByLabel('Sign-in code', { exact: true })).toHaveValue('');
  await expect(page.getByRole('button', { name: 'Email me a sign-in code' })).toBeEnabled();
 });
+
+test('a newly signed-in browser loads already-paired Apple Health data on Home', async ({ page }) => {
+ await page.clock.install({ time: new Date('2026-11-13T14:00:00Z') });
+ let signedIn = false; let healthRequests = 0;
+ const snapshot = { ownerId: '11111111-1111-4111-8111-111111111111', devices: [{ id: '22222222-2222-4222-8222-222222222222', name: 'iPhone', timeZone: 'Europe/London', createdAt: '2026-11-13T13:00:00Z', lastSyncAt: '2026-11-13T14:00:00Z', revoked: false }], steps: [{ date: '2026-11-13', steps: 6500, timeZone: 'Europe/London', updatedAt: '2026-11-13T14:00:00Z' }], workouts: [] };
+ await page.route('**/api/health', route => { healthRequests++; return signedIn ? route.fulfill({ json: snapshot }) : route.fulfill({ status: 401, json: { error: 'Sign in' } }); });
+ await page.route('**/api/auth', route => {
+  if (route.request().method() === 'GET') return route.fulfill({ json: { configured: true, email: signedIn ? 'test@example.test' : null } });
+  if (route.request().postDataJSON().action === 'verify') { signedIn = true; return route.fulfill({ json: { signedIn: true, email: 'test@example.test' } }); }
+  return route.fulfill({ json: { sent: true } });
+ });
+ await page.goto('/auth'); await page.getByLabel('Email address', { exact: true }).fill('test@example.test');
+ await expect.poll(() => healthRequests).toBeGreaterThan(0);
+ expect(await page.evaluate(() => localStorage.getItem('fitai-health-auto'))).toBeNull();
+ await page.getByRole('button', { name: 'I already have a code' }).click();
+ await page.getByLabel('Sign-in code', { exact: true }).fill('123456');
+ await page.getByRole('button', { name: 'Verify code & sign in', exact: true }).click();
+ await expect(page.getByRole('heading', { name: 'Signed in as test@example.test' })).toBeVisible();
+ await page.getByRole('link', { name: 'Home', exact: true }).filter({ visible: true }).click();
+ await expect(page.locator('.home-kpis')).toContainText('6,500');
+ await expect(page.locator('.home-kpis')).toContainText('Apple Health');
+ await expect(page.getByRole('region', { name: 'Apple Health sync status' })).toContainText('Last received');
+});
